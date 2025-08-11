@@ -6,7 +6,7 @@ on:
 
 jobs:
   build_meal-planner:
-    name: meal-planner - Build & Test
+    name: build (meal-planner)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,7 +29,7 @@ jobs:
 
 
   build_nutri-chef-ai:
-    name: nutri-chef-ai - Build & Test
+    name: build (nutri-chef-ai)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -51,7 +51,7 @@ jobs:
         run: ./gradlew test
 
   ui:
-    name: build (mankkoo-ui)
+    name: build (ui)
     runs-on: ubuntu-24.04
     defaults:
       run:
