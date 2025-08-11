@@ -38,3 +38,9 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Local env files ###
+.env
+
+### Db backups ###
+infra/backup/*.dump.gz
