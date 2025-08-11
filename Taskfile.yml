@@ -18,6 +18,13 @@ tasks:
       - echo "Starting meal-planner app..."
       - ./gradlew bootRun
 
+  nutri-chef-ai:
+    desc: Run nutri-chef-ai app
+    dir: nutri-chef-ai
+    cmds:
+      - echo "Starting nutri-chef-ai app..."
+      - ./gradlew bootRun
+
   infra:
       desc: Spin up infra
       cmds: 
