@@ -49,3 +49,41 @@ jobs:
         run: ./gradlew build
       - name: Run tests
         run: ./gradlew test
+
+  ui:
+    name: build (mankkoo-ui)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Set up NodeJS ✨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Install package dependencies
+        run: npm install
+
+        # - name: Check linting and formatting
+        #   # Custom script for checking the linting and formatting being in place
+        #   run: npm run lint
+
+      - name: Create build 🏗️
+        run: npm run build
