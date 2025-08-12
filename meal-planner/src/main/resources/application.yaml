@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: meal-planner
+  datasource:
+    url: jdbc:postgresql://localhost:5432/meal_planner
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: true

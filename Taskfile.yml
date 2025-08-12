@@ -1,0 +1,61 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  meal-planner:
+    desc: Run meal-planner app
+    dir: meal-planner
+    cmds:
+      - echo "Starting meal-planner app..."
+      - ./gradlew bootRun
+
+  nutri-chef-ai:
+    desc: Run nutri-chef-ai app
+    dir: nutri-chef-ai
+    cmds:
+      - echo "Starting nutri-chef-ai app..."
+      - ./gradlew bootRun
+
+  infra:
+      desc: Spin up infra
+      cmds: 
+        - echo "Starting docker containers..."
+        - docker compose up -d postgres
+
+  backup:
+    desc: Create PostgreSQL backup (all in Docker)
+    vars:
+      db: meal_planner
+    cmds:
+      - echo "Starting backuping '{{.db}}' database..."
+      - docker cp infra/postgres-backup.sh meal_planner_db:/tmp/backup_db.sh
+      - docker exec meal_planner_db chmod +x /tmp/backup_db.sh
+      - |
+        backup_file=$(docker exec meal_planner_db /bin/bash -c "/tmp/backup_db.sh {{.db}}") && \
+        docker cp meal_planner_db:/tmp/$backup_file infra/backup/$backup_file && \
+        docker exec meal_planner_db /bin/bash -c "rm /tmp/$backup_file /tmp/backup_db.sh"
+      - echo "Backup for '{{.db}}' database completed."
+
+  restore:
+    desc: Restoring backup data for PostgreSQL
+    vars:
+      file: meal_planner_20250727_1417
+      db: meal_planner
+    cmds:
+      - echo "Starting restoring '{{.db}}' database. Copying backup..."
+      - docker cp infra/backup/{{.file}}.dump.gz meal_planner_db:/tmp/{{.file}}.dump.gz
+      - docker cp infra/postgres-restore.sh meal_planner_db:/tmp/restore_db.sh
+      - docker exec meal_planner_db chmod +x /tmp/restore_db.sh
+      - docker exec meal_planner_db /bin/bash -c "/tmp/restore_db.sh {{.file}} {{.db}}"
+      - docker exec meal_planner_db /bin/bash -c "rm /tmp/restore_db.sh"
+      - echo "Backup restored."
+
