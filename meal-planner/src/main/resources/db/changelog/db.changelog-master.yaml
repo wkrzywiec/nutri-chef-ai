@@ -1,13 +1,15 @@
 databaseChangeLog:
     - include:
-        file: db/01_init_recipe_tables.sql
+        file: db/changesets/01_init_recipe_tables.sql
     - include:
-        file: db/02_recipe_scraper_error.sql
+        file: db/changesets/02_recipe_scraper_error.sql
     - include:
-        file: db/03_recipe_ingredient_table.sql
+        file: db/changesets/03_recipe_ingredient_table.sql
     - include:
-        file: db/04_norm_ingredients_in_recipe_ingredtient_table.sql
+        file: db/changesets/04_norm_ingredients_in_recipe_ingredtient_table.sql
     - include:
-        file: db/05_ingredient_table.sql
+        file: db/changesets/05_ingredient_table.sql
     - include:
-        file: db/06_add_nutri_info.sql
+        file: db/changesets/06_add_nutri_info.sql
+    - include:
+        file: db/changesets/07_recipe_embedding_table.sql
