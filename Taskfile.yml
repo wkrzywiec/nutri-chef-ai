@@ -31,6 +31,12 @@ tasks:
         - echo "Starting docker containers..."
         - docker compose up -d postgres
 
+  infra:down:
+    desc: Tear down infra
+    cmds: 
+      - echo "Stopping docker containers..."
+      - docker compose down
+
   backup:
     desc: Create PostgreSQL backup (all in Docker)
     vars:

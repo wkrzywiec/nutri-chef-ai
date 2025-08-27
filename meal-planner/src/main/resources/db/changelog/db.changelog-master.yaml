@@ -13,3 +13,5 @@ databaseChangeLog:
         file: db/changesets/06_add_nutri_info.sql
     - include:
         file: db/changesets/07_recipe_embedding_table.sql
+    - include:
+        file: db/changesets/08_add_ref_to_recipe.sql

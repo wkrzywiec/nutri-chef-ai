@@ -69,3 +69,5 @@ dist-ssr
 
 ### Db backups ###
 infra/backup/*.dump.gz
+
+embeddings/batch-files/*

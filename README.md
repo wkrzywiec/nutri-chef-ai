@@ -11,12 +11,18 @@ The `/embeddings` dir contains Python script for transforming PostgreSQL data in
 In order to execute it is highly recommended to create virtual env (`venv`):
 
 ```bash
-python -m venv <path to the project>/embeddings
+python -m venv <path to the project>/embeddings/.venv
 ```
 
 And then activate it (for Linux and Mac replace `Scripts` -> `bin`):
 
 ```bash
-source <path to the project>/embeddings/Scripts/activate
+source <path to the project>/embeddings/.venv/Scripts/activate
+```
+
+or in powershell (Windows):
+
+```powershell
+<path to the project>\.venv\Scripts\Activate.ps1
 ```
 
