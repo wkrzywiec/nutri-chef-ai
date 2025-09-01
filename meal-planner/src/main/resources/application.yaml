@@ -8,3 +8,9 @@ spring:
     driver-class-name: org.postgresql.Driver
   liquibase:
     enabled: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: "text-embedding-3-small"
