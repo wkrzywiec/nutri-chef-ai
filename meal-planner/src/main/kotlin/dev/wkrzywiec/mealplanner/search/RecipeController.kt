@@ -8,21 +8,32 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/recipes")
-class RecipeSearchController(
+class RecipeController(
     val recipeSearchService: RecipeSearchService
 ) {
 
     @GetMapping("/search")
-    fun findRecipesByPromptGet(
+    fun findRecipes(
         @RequestParam prompt: String?,
         @RequestParam(defaultValue = "10") limit: Int
     ): ResponseEntity<RecipeSearchResponse?> {
         val matches = recipeSearchService
-            .findRecipesByPrompt(prompt, limit)
+            .findRecipes(prompt, limit)
 
         val response: RecipeSearchResponse? = RecipeSearchResponse(matches = matches, totalFound = matches.size)
 
         return ResponseEntity.ok<RecipeSearchResponse?>(response)
+    }
+
+    @GetMapping("/plan")
+    fun planMeals(
+        @RequestParam prompt: String?,
+    ): ResponseEntity<String> {
+        if (prompt != null) {
+            val plan = recipeSearchService.generateMealPlan(prompt)
+            return ResponseEntity.ok(plan)
+        }
+        return ResponseEntity.ok("Nothing was provided")
     }
 }
 
