@@ -1,6 +1,7 @@
 package dev.wkrzywiec.mealplanner.plan.application
 
 import dev.wkrzywiec.mealplanner.plan.MealPlanner
+import dev.wkrzywiec.mealplanner.plan.RecipeProposals
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,8 +17,8 @@ class MealPlannerController(
     @GetMapping("/single")
     fun proposeMeal(
         @RequestParam prompt: String,
-    ): ResponseEntity<String> {
-        val plan = mealPlanner.proposeMeal(prompt)
-        return ResponseEntity.ok(plan)
+    ): ResponseEntity<RecipeProposals> {
+        val proposals = mealPlanner.proposeMeal(prompt)
+        return ResponseEntity.ok(proposals)
     }
 }

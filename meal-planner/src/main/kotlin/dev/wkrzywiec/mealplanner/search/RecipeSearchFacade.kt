@@ -2,6 +2,7 @@ package dev.wkrzywiec.mealplanner.search
 
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class RecipeSearchFacade(
@@ -20,5 +21,9 @@ class RecipeSearchFacade(
         val promptEmbedding: FloatArray = embeddingEngine.embed(prompt)
         log.info { "Fetched ${promptEmbedding.size} vectors. Looking for closest recipes..." }
         return repository.findNearestRecipes(promptEmbedding, limit)
+    }
+
+    fun findRecipes(recipeIds: List<UUID>): List<Recipe> {
+        return repository.findRecipes(recipeIds)
     }
 }

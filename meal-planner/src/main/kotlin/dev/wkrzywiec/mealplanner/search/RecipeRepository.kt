@@ -34,7 +34,6 @@ class RecipeRepository(
             ) AS re
             JOIN recipe r ON r.id = re.recipe_id
             ORDER BY re.similarity_score ASC;
-
         """
 
         val params = MapSqlParameterSource()
@@ -66,5 +65,38 @@ class RecipeRepository(
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    fun findRecipes(recipeIds: List<UUID>): List<Recipe> {
+        val sql = """
+            SELECT
+              r.id AS recipe_id,
+              r.name,
+              r.description,
+              r.ingredients,
+              r.instructions,
+              r.source_url,
+              r.servings,
+              r.tags
+            FROM recipe r
+            WHERE r.id IN (:recipe_ids)
+        """
+        val params = MapSqlParameterSource()
+            .addValue("recipe_ids", recipeIds)
+
+        return jdbcTemplate.query(sql, params, rowMapperWithoutSimilarityScore())
+    }
+
+    fun rowMapperWithoutSimilarityScore() = RowMapper<Recipe> { rs, _ ->
+        Recipe(
+            id = UUID.fromString(rs.getString("recipe_id")),
+            name = rs.getString("name"),
+            description = rs.getString("description"),
+            ingredients = parseFromJsonb<Ingredients>(rs.getString("ingredients")),
+            instructions = rs.getString("instructions").toObject<List<Map<String, Any>>>(),
+            sourceUrl = rs.getString("source_url"),
+            servings = rs.getString("servings"),
+            tags =  parseFromJsonb<String>(rs.getString("tags"))
+        )
     }
 }
