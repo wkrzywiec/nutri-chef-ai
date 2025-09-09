@@ -1,5 +1,7 @@
-package dev.wkrzywiec.mealplanner.search
+package dev.wkrzywiec.mealplanner.search.application
 
+import dev.wkrzywiec.mealplanner.search.Recipe
+import dev.wkrzywiec.mealplanner.search.RecipeSearchFacade
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -9,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/recipes")
 class RecipeController(
-    val recipeSearchService: RecipeSearchService
+    val recipeSearchService: RecipeSearchFacade
 ) {
 
     @GetMapping("/search")
@@ -24,32 +26,11 @@ class RecipeController(
 
         return ResponseEntity.ok<RecipeSearchResponse?>(response)
     }
-
-    @GetMapping("/plan")
-    fun planMeals(
-        @RequestParam prompt: String?,
-    ): ResponseEntity<String> {
-        if (prompt != null) {
-            val plan = recipeSearchService.generateMealPlan(prompt)
-            return ResponseEntity.ok(plan)
-        }
-        return ResponseEntity.ok("Nothing was provided")
-    }
 }
 
 data class RecipeSearchResponse(
-    val matches: List<RecipeMatch?>? = null,
+    val matches: List<Recipe>? = null,
     val totalFound: Int = 0,
+    // todo cound time
     val searchTimeMs: Long = 0,
-)
-
-data class RecipeMatch(
-    val id: String? = null,
-    val name: String? = null,
-    val description: String? = null,
-    val similarityScore: Double? = null,
-    val ingredients: Any? = null,
-    val instructions: Any? = null,
-    val sourceUrl: String? = null,
-    val servings: String? = null,
 )
