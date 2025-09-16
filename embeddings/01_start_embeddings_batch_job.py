@@ -1,13 +1,11 @@
 import json
 import os
 from pathlib import Path
-import time
 import logging
 from typing import Any, Dict, List
 import psycopg2
 import openai
 import tiktoken     
-import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -147,7 +145,7 @@ def prepare_jsonl_files(chunks: List[Dict[str, Any]], base_output_path: str) -> 
     logger.info(f"Created {len(output_paths)} JSONL files")
     return output_paths
 
-async def start_batch_job(file_path: str, model: str) -> str:
+def start_batch_job(file_path: str, model: str) -> str:
     """Create and start a batch embedding job using the latest OpenAI API."""
     client = openai.OpenAI(api_key=OPENAI_API_KEY)
     
@@ -163,7 +161,7 @@ async def start_batch_job(file_path: str, model: str) -> str:
     
     # Create batch embedding job
     logger.info(f"Creating batch embedding job using model: {model}")
-    descr = datetime.now().strftime("%Y%m%d_%H%M%S") + " - kwestia smaku embedding"
+    descr = datetime.now().strftime("%Y%m%d_%H%M%S") + " - nutri chef embedding"
     batch_response = client.batches.create(
         input_file_id=file_id,
         endpoint="/v1/embeddings",
@@ -188,7 +186,7 @@ def save_job_id(job_id: str, input_file: str, temp_dir: Path):
     logger.info(f"Saved job ID {job_id} to tracking file: {jobs_file}")
 
 
-async def main():
+def main():
     logger.info("Starting embedding generation process")
     
     # Create temp directory for JSONL files if it doesn't exist
@@ -217,7 +215,7 @@ async def main():
             logger.info(f"Processing file {file_num}/{len(jsonl_paths)}: {jsonl_path}")
             
             # Create and monitor batch job for each file
-            job_id = await start_batch_job(jsonl_path, EMBEDDING_MODEL)
+            job_id = start_batch_job(jsonl_path, EMBEDDING_MODEL)
             logger.info(f"Batch job created with ID: {job_id}")
     
             # Save job ID for tracking
@@ -235,5 +233,5 @@ async def main():
         logger.info("Database connection closed")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+   main()
      

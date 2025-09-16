@@ -30,13 +30,11 @@ logger = logging.getLogger(__name__)
 _loaded_request_data = None
 
 def get_token_count(text: Any, model: str) -> int:
-    # Ensure text is a string
     if text is None:
         text = ""
     if not isinstance(text, str):
         text = str(text)
     
-    # Remove any null bytes that might cause issues
     text = text.replace('\x00', '')
     
     enc = tiktoken.encoding_for_model(model)
@@ -126,8 +124,7 @@ def store_embeddings(conn, embeddings: List[Dict[str, Any]]):
         conn.commit()  # Final commit for remaining records
     logger.info(f"Successfully stored all {len(embeddings)} embeddings in database")
 
-
-if __name__ == "__main__":
+def main():
     try:
 
         all_embeddings = load_embeddings(embedding_files)
@@ -152,4 +149,6 @@ if __name__ == "__main__":
             conn.close()
             logger.info("Database connection closed")
 
-        
+
+if __name__ == "__main__":
+    main()
