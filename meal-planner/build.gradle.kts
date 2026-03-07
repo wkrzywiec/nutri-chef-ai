@@ -23,8 +23,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11")
+	implementation("org.springframework.ai:spring-ai-starter-model-openai:1.0.1")
+	implementation("org.springframework.ai:spring-ai-autoconfigure-model-openai:1.0.1")
+	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.liquibase:liquibase-core")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.2")
 
 	runtimeOnly("org.postgresql:postgresql")
 
