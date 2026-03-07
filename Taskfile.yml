@@ -55,12 +55,13 @@ tasks:
   restore:
     desc: Restoring backup data for PostgreSQL
     vars:
-      file: meal_planner_20250727_1417
+      file: meal_planner_20250916_0617
       db: meal_planner
     cmds:
       - echo "Starting restoring '{{.db}}' database. Copying backup..."
       - docker cp infra/backup/{{.file}}.dump.gz meal_planner_db:/tmp/{{.file}}.dump.gz
       - docker cp infra/postgres-restore.sh meal_planner_db:/tmp/restore_db.sh
+      - docker exec meal_planner_db sed -i 's/\r$//' /tmp/restore_db.sh
       - docker exec meal_planner_db chmod +x /tmp/restore_db.sh
       - docker exec meal_planner_db /bin/bash -c "/tmp/restore_db.sh {{.file}} {{.db}}"
       - docker exec meal_planner_db /bin/bash -c "rm /tmp/restore_db.sh"

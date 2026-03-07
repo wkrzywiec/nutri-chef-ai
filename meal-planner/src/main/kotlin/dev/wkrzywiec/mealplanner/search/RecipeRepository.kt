@@ -1,6 +1,7 @@
 package dev.wkrzywiec.mealplanner.search
 
 import dev.wkrzywiec.mealplanner.shared.config.toObject
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -11,6 +12,11 @@ import java.util.UUID
 class RecipeRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
+
+    companion object {
+        private val log = logger {}
+    }
+
     fun findNearestRecipes(promptEmbedding: FloatArray, limit: Int = 10): List<Recipe> {
         val sql = """
             SELECT
@@ -48,21 +54,22 @@ class RecipeRepository(
             id = UUID.fromString(rs.getString("recipe_id")),
             name = rs.getString("name"),
             description = rs.getString("description"),
-            ingredients = parseFromJsonb<Ingredients>(rs.getString("ingredients")),
-            instructions = rs.getString("instructions").toObject<List<Map<String, Any>>>(),
+            ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
+            instructions =  parseFromJson<Instruction>(rs.getString("instructions")),
             sourceUrl = rs.getString("source_url"),
             servings = rs.getString("servings"),
-            tags =  parseFromJsonb<String>(rs.getString("tags")),
+            tags =  parseFromJson<String>(rs.getString("tags")),
             similarityScore = rs.getDouble("similarity_score"),
         )
     }
 
-    private inline fun <reified T> parseFromJsonb(jsonbString: String?): List<T> {
-        if (jsonbString.isNullOrBlank()) return emptyList()
+    private inline fun <reified T> parseFromJson(jsonString: String?): List<T> {
+        if (jsonString.isNullOrBlank()) return emptyList()
 
         return try {
-            jsonbString.toObject<List<T>>()
+            jsonString.toObject<List<T>>()
         } catch (e: Exception) {
+            log.error(e) {"Failed to parse json response to object:  $jsonString"}
             emptyList()
         }
     }
@@ -92,11 +99,11 @@ class RecipeRepository(
             id = UUID.fromString(rs.getString("recipe_id")),
             name = rs.getString("name"),
             description = rs.getString("description"),
-            ingredients = parseFromJsonb<Ingredients>(rs.getString("ingredients")),
-            instructions = rs.getString("instructions").toObject<List<Map<String, Any>>>(),
+            ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
+            instructions = parseFromJson<Instruction>(rs.getString("instructions")),
             sourceUrl = rs.getString("source_url"),
             servings = rs.getString("servings"),
-            tags =  parseFromJsonb<String>(rs.getString("tags"))
+            tags =  parseFromJson<String>(rs.getString("tags"))
         )
     }
 }
