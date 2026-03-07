@@ -15,11 +15,11 @@ class RecipeSearchFacade(
     }
 
     fun findRecipes(prompt: String?, limit: Int): List<Recipe> {
-        if (prompt == null || prompt.isBlank()) return mutableListOf()
+        if (prompt == null || prompt.isBlank()) return emptyList()
         log.info { "Searching for $limit recipes based on a user prompt: '$prompt'..."}
 
         val promptEmbedding: FloatArray = embeddingEngine.embed(prompt)
-        log.info { "Fetched ${promptEmbedding.size} vectors. Looking for closest recipes..." }
+        log.info { "User input was embedded. Looking for closest recipes..." }
         return repository.findNearestRecipes(promptEmbedding, limit)
     }
 

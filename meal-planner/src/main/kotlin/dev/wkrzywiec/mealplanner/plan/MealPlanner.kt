@@ -71,7 +71,7 @@ class MealPlanner(
         return answer?.let {
             mapToRawRecipeProposals(it)
         }?.let {
-            mapToRecipeProposals(it)
+            mapToRecipeProposals(it, recipes)
         }
     }
 
@@ -79,8 +79,7 @@ class MealPlanner(
         return answer.toObject<RawRecipeProposals>()
     }
 
-    private fun mapToRecipeProposals(raw: RawRecipeProposals): RecipeProposals? {
-        val fullRecipes = recipeSearch.findRecipes(raw.recipes.map { it.recipeId })
+    private fun mapToRecipeProposals(raw: RawRecipeProposals, fullRecipes: List<Recipe>): RecipeProposals? {
         return RecipeProposals(
             response = raw.response,
             nextActions = raw.nextActions,

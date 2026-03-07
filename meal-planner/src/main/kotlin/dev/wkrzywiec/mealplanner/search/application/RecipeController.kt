@@ -12,30 +12,30 @@ import kotlin.system.measureTimeMillis
 @RestController
 @RequestMapping("/api/recipes")
 class RecipeController(
-    val recipeSearchService: RecipeSearchFacade
+    val recipeSearchFacade: RecipeSearchFacade
 ) {
 
     @GetMapping("/search")
     fun findRecipes(
         @RequestParam prompt: String?,
         @RequestParam(defaultValue = "10") limit: Int
-    ): ResponseEntity<RecipeSearchResponse?> {
+    ): ResponseEntity<RecipeSearchResponse> {
 
         lateinit var matches: List<Recipe>
 
         val duration = measureTimeMillis {
-            matches = recipeSearchService
+            matches = recipeSearchFacade
                 .findRecipes(prompt, limit)
         }
 
-        val response: RecipeSearchResponse? = RecipeSearchResponse(matches = matches, totalFound = matches.size, searchTimeMs = duration)
+        val response = RecipeSearchResponse(matches = matches, totalFound = matches.size, searchTimeMs = duration)
 
-        return ResponseEntity.ok<RecipeSearchResponse?>(response)
+        return ResponseEntity.ok(response)
     }
 }
 
 data class RecipeSearchResponse(
-    val matches: List<Recipe>? = null,
+    val matches: List<Recipe> = emptyList(),
     val totalFound: Int = 0,
     val searchTimeMs: Long = 0,
 )
