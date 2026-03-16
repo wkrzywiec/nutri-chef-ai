@@ -1,7 +1,7 @@
 plugins {
 	kotlin("jvm") version "2.2.0"
 	kotlin("plugin.spring") version "2.2.0"
-	id("org.springframework.boot") version "4.0.3"
+	id("org.springframework.boot") version "3.5.4"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -19,13 +19,15 @@ repositories {
 	mavenCentral()
 }
 
+extra["springAiVersion"] = "1.0.1"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11")
-	implementation("org.springframework.ai:spring-ai-starter-model-openai:1.0.1")
-	implementation("org.springframework.ai:spring-ai-autoconfigure-model-openai:1.0.1")
+	implementation("org.springframework.ai:spring-ai-starter-model-openai")
+	implementation("org.springframework.ai:spring-ai-autoconfigure-model-openai")
 	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.liquibase:liquibase-core")
@@ -36,6 +38,12 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+	}
 }
 
 kotlin {

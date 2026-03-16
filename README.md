@@ -4,6 +4,18 @@ Let Nutri Chef AI spice up your week! This smart meal planner uses AI and a rich
 
 ## Services and tools
 
+### Streaming
+
+#### Single day
+
+```bash
+curl -N "http://localhost:8080/api/planner/single/stream?prompt=healthy+fullfiling+meals"
+```
+
+```bash
+curl -N "http://host.docker.internal:8080/api/planner/single/stream?prompt=healthy+fullfiling+meals"
+```
+
 ### Embeddings
 
 The `/embeddings` dir contains Python script for transforming PostgreSQL data into vectorized data.
@@ -25,4 +37,3 @@ or in powershell (Windows):
 ```powershell
 <path to the project>\.venv\Scripts\Activate.ps1
 ```
-

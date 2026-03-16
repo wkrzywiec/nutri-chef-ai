@@ -1,6 +1,9 @@
 spring:
   application:
     name: meal-planner
+  mvc:
+    async:
+      request-timeout: -1
   datasource:
     url: jdbc:postgresql://localhost:5432/meal_planner
     username: postgres
