@@ -27,6 +27,85 @@ class MealPlanner(
         private val log = logger {}
     }
 
+    fun proposeMealStreaming(userPrompt: String, onEvent: (AiAgentEvent) -> Unit) {
+        log.info { "Streaming meal proposals for prompt '$userPrompt'" }
+        onEvent(AiAgentEvent.PlanningStarted(userPrompt))
+        onEvent(AiAgentEvent.SearchingRecipes())
+
+        val recipes = recipeSearch.findRecipes(userPrompt, 10)
+        log.info { "Found ${recipes.size} recipes" }
+        onEvent(AiAgentEvent.RecipesFound(recipes.size))
+
+        // --- Call 1: stream the response text token by token ---
+        log.info { "Streaming response from LLM..." }
+        onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
+        builder.build().prompt()
+            .system(
+                """
+                You are a nutrition assistant that selects the best fitting recipes for meal planning.
+                Write a brief overall explanation of your selection strategy and nutritional focus
+                for the user query, given the available recipes. Plain text only, no JSON, no bullet points.
+                RECIPES: ${recipes.toJson()}
+                """.trimIndent()
+            )
+            .user { u -> u.text("USER_QUERY: \"$userPrompt\"") }
+            .stream()
+            .content()
+            .doOnNext { token -> onEvent(AiAgentEvent.ResponseToken(token)) }
+            .blockLast()
+
+        // --- Call 2: batch — select recipes + rationales + nextActions ---
+        log.info { "Fetching recipe selection from LLM..." }
+        onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
+        val answer = builder.build().prompt()
+            .system(
+                """
+                You are a nutrition assistant that selects the best fitting recipes for meal planning.
+                
+                RESPONSE FORMAT: Respond with valid JSON in exactly this structure:
+                {
+                  "nextActions": ["suggested action 1", "suggested action 2"],
+                  "recipes": [
+                    {
+                      "recipeId": "recipe-uuid-here",
+                      "rationale": "Why this recipe fits the user's goals"
+                    }
+                  ]
+                }
+                
+                REQUIREMENTS:
+                - Select 3-5 most suitable recipes from the provided list
+                - Focus on nutritional balance, variety, and health benefits
+                - Include specific nutritional reasons in each rationale
+                - Suggest 2-3 relevant next actions for the user
+                - Use the exact recipe IDs provided
+                - Respond in the same language as the user's request
+                - Return only valid JSON, no additional text
+                
+                RECIPES: ${recipes.toJson()}
+                """.trimIndent()
+            )
+            .user { u -> u.text("USER_QUERY: \"$userPrompt\"") }
+            .call()
+            .content()
+        log.info { "Recipe selection from LLM:\n$answer" }
+
+        answer
+            ?.let { runCatching { it.toObject<RawRecipesAndActions>() }.getOrNull() }
+            ?.let { raw ->
+                raw.recipes.forEach { r ->
+                    val recipe = recipes.find { it.id == r.recipeId }
+                    onEvent(AiAgentEvent.RecipeSelected(r.recipeId, recipe, r.rationale))
+                }
+                onEvent(AiAgentEvent.NextActions(raw.nextActions))
+            }
+    }
+
+    private data class RawRecipesAndActions(
+        val nextActions: List<String>,
+        val recipes: List<RecipeIdWithRationale>,
+    )
+
     fun proposeMeal(userPrompt: String, onEvent: (AiAgentEvent) -> Unit) {
         log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'"}
         onEvent(AiAgentEvent.PlanningStarted(userPrompt))
