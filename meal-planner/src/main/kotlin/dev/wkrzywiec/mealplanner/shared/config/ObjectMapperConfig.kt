@@ -6,8 +6,15 @@ import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import java.time.Clock
 
+@Configuration
 class ObjectMapperConfig {
+
+    @Bean
+    fun clock(): Clock = Clock.systemUTC()
 
     companion object {
         val objectMapper = objectMapper()
