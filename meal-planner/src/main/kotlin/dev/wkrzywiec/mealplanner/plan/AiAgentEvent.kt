@@ -12,7 +12,7 @@ sealed class AiAgentEvent {
 
     // Streaming token events
     data class ResponseToken(val token: String) : AiAgentEvent()
-    data class RecipeSelected(val recipeId: UUID, val recipe: Recipe?, val rationale: String) : AiAgentEvent()
+    data class RecipeSelected(val recipeId: UUID, val recipe: Recipe?) : AiAgentEvent()
     data class NextActions(val actions: List<String>) : AiAgentEvent()
 
     data class PlanReady(val proposals: RecipeProposals) : AiAgentEvent()

@@ -9,13 +9,13 @@ import org.springframework.ai.chat.client.ChatClient
 import org.springframework.stereotype.Service
 import java.util.UUID
 
-data class RawRecipeProposals(val response: String, val nextActions: List<String>, val recipes: List<RecipeIdWithRationale>)
+data class RawRecipeProposals(val response: String, val nextActions: List<String>, val recipes: List<RecipeIdEntry>)
 
-class RecipeIdWithRationale(val rationale: String, val recipeId: UUID)
+class RecipeIdEntry(val recipeId: UUID)
 
-data class RecipeProposals(val response: String, val nextActions: List<String>, val recipes: List<RecipeWithRationale>)
+data class RecipeProposals(val response: String, val nextActions: List<String>, val recipes: List<RecipeEntry>)
 
-data class RecipeWithRationale(val rationale: String, val recipe: Recipe?)
+data class RecipeEntry(val recipe: Recipe?)
 
 @Service
 class MealPlanner(
@@ -54,10 +54,10 @@ class MealPlanner(
             .doOnNext { token -> onEvent(AiAgentEvent.ResponseToken(token)) }
             .blockLast()
 
-        // --- Call 2: batch — select recipes + rationales + nextActions ---
+        // --- Call 2: batch — select recipe IDs + nextActions ---
         log.info { "Fetching recipe selection from LLM..." }
         onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
-        val answer = builder.build().prompt()
+        val selectionAnswer = builder.build().prompt()
             .system(
                 """
                 You are a nutrition assistant that selects the best fitting recipes for meal planning.
@@ -65,18 +65,11 @@ class MealPlanner(
                 RESPONSE FORMAT: Respond with valid JSON in exactly this structure:
                 {
                   "nextActions": ["suggested action 1", "suggested action 2"],
-                  "recipes": [
-                    {
-                      "recipeId": "recipe-uuid-here",
-                      "rationale": "Why this recipe fits the user's goals"
-                    }
-                  ]
+                  "recipeIds": ["uuid-1", "uuid-2"]
                 }
                 
                 REQUIREMENTS:
-                - Select 3-5 most suitable recipes from the provided list
-                - Focus on nutritional balance, variety, and health benefits
-                - Include specific nutritional reasons in each rationale
+                - Select 3-5 most suitable recipe IDs from the provided list
                 - Suggest 2-3 relevant next actions for the user
                 - Use the exact recipe IDs provided
                 - Respond in the same language as the user's request
@@ -88,34 +81,35 @@ class MealPlanner(
             .user { u -> u.text("USER_QUERY: \"$userPrompt\"") }
             .call()
             .content()
-        log.info { "Recipe selection from LLM:\n$answer" }
+        log.info { "Recipe selection from LLM:\n$selectionAnswer" }
 
-        answer
-            ?.let { runCatching { it.toObject<RawRecipesAndActions>() }.getOrNull() }
-            ?.let { raw ->
-                raw.recipes.forEach { r ->
-                    val recipe = recipes.find { it.id == r.recipeId }
-                    onEvent(AiAgentEvent.RecipeSelected(r.recipeId, recipe, r.rationale))
-                }
-                onEvent(AiAgentEvent.NextActions(raw.nextActions))
-            }
+        val selection = selectionAnswer
+            ?.let { runCatching { it.toObject<RawSelection>() }.getOrNull() }
+            ?: return
+
+        onEvent(AiAgentEvent.NextActions(selection.nextActions))
+
+        selection.recipeIds.forEach { recipeId ->
+            val recipe = recipes.find { it.id == recipeId } ?: return@forEach
+            onEvent(AiAgentEvent.RecipeSelected(recipeId, recipe))
+        }
     }
 
-    private data class RawRecipesAndActions(
+    private data class RawSelection(
         val nextActions: List<String>,
-        val recipes: List<RecipeIdWithRationale>,
+        val recipeIds: List<UUID>,
     )
 
     fun proposeMeal(userPrompt: String, onEvent: (AiAgentEvent) -> Unit) {
-        log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'"}
+        log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'" }
         onEvent(AiAgentEvent.PlanningStarted(userPrompt))
         onEvent(AiAgentEvent.SearchingRecipes())
 
         val recipes = recipeSearch.findRecipes(userPrompt, 10)
-        log.info {" Found ${recipes.size} recipes with ids: ${recipes.map { it.id }} "}
+        log.info { "Found ${recipes.size} recipes with ids: ${recipes.map { it.id }}" }
         onEvent(AiAgentEvent.RecipesFound(recipes.size))
         onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
-        log.info { "Calling an AI agent..."}
+        log.info { "Calling an AI agent..." }
         val answer = builder.build().prompt()
             .system(
                 """
@@ -129,8 +123,7 @@ class MealPlanner(
                   "nextActions": ["suggested action 1", "suggested action 2"],
                   "recipes": [
                     {
-                      "recipeId": "recipe-uuid-here",
-                      "rationale": "Detailed explanation of why this recipe was selected, focusing on specific nutritional benefits"
+                      "recipeId": "recipe-uuid-here"
                     }
                   ]
                 }
@@ -138,7 +131,6 @@ class MealPlanner(
                 REQUIREMENTS:
                 - Select 3-5 most suitable recipes from the provided list
                 - Focus on nutritional balance, variety, and health benefits
-                - Include specific nutritional reasons in each rationale
                 - Suggest 2-3 relevant next actions for the user
                 - Use the exact recipe IDs provided
                 - Respond in the same language as the user's request
@@ -157,63 +149,14 @@ class MealPlanner(
         }?.let {
             onEvent(AiAgentEvent.PlanReady(mapToRecipeProposals(it, recipes)))
         }
-
-
-
-//        override fun send(event: AiEvent) {
-//            executor.execute {
-//                try {
-//                    emitter.send(
-//                        SseEmitter.event()
-//                            .name("status")
-//                            .data(StatusEvent(phase = "start", message = "Starting meal proposal"))
-//                    )
-//
-//                    // Ensure the first event is flushed to the client early.
-//                    // Some clients/proxies don't display anything until they receive at least one chunk.
-////                emitter.send(SseEmitter.event().comment("flush"))
-//
-//                    emitter.send(
-//                        SseEmitter.event()
-//                            .name("status")
-//                            .data(StatusEvent(phase = "search", message = "Searching recipes"))
-//                    )
-//
-////                emitter.send(SseEmitter.event().comment("flush"))
-//
-//                    emitter.send(
-//                        SseEmitter.event()
-//                            .name("status")
-//                            .data(StatusEvent(phase = "llm", message = "Calling LLM"))
-//                    )
-//
-////                emitter.send(SseEmitter.event().comment("flush"))
-//
-//                    val proposals: RecipeProposals? = mealPlanner.proposeMeal(prompt)
-//
-//                    val finalPayload: Any = proposals ?: mapOf("error" to "No proposals")
-//
-//                    emitter.send(
-//                        SseEmitter.event()
-//                            .name("final")
-//                            .data(finalPayload)
-//                    )
-//
-//                    emitter.complete()
-//                } catch (e: Exception) {
-//                    SsEventEmitter.Companion.log.warn(e) { "SSE stream failed" }
-//                    emitter.completeWithError(e)
-//                }
-//            }
-//        }
     }
 
     fun proposeMeal(userPrompt: String): RecipeProposals? {
-        log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'"}
+        log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'" }
         val recipes = recipeSearch.findRecipes(userPrompt, 10)
 
-        log.info {" Found ${recipes.size} recipes with ids: ${recipes.map { it.id }} "}
-        log.info { "Calling an AI agent..."}
+        log.info { "Found ${recipes.size} recipes with ids: ${recipes.map { it.id }}" }
+        log.info { "Calling an AI agent..." }
         val answer = builder.build().prompt()
             .system(
                 """
@@ -227,8 +170,7 @@ class MealPlanner(
                   "nextActions": ["suggested action 1", "suggested action 2"],
                   "recipes": [
                     {
-                      "recipeId": "recipe-uuid-here",
-                      "rationale": "Detailed explanation of why this recipe was selected, focusing on specific nutritional benefits"
+                      "recipeId": "recipe-uuid-here"
                     }
                   ]
                 }
@@ -236,7 +178,6 @@ class MealPlanner(
                 REQUIREMENTS:
                 - Select 3-5 most suitable recipes from the provided list
                 - Focus on nutritional balance, variety, and health benefits
-                - Include specific nutritional reasons in each rationale
                 - Suggest 2-3 relevant next actions for the user
                 - Use the exact recipe IDs provided
                 - Respond in the same language as the user's request
@@ -264,7 +205,7 @@ class MealPlanner(
         return RecipeProposals(
             response = raw.response,
             nextActions = raw.nextActions,
-            recipes = raw.recipes.map { RecipeWithRationale(rationale = it.rationale, recipe = fullRecipes.find { recipe -> recipe.id == it.recipeId}) }
+            recipes = raw.recipes.map { RecipeEntry(recipe = fullRecipes.find { recipe -> recipe.id == it.recipeId }) }
         )
     }
 }
