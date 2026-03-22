@@ -122,28 +122,8 @@ class MealPlannerController(
     // SSE event mapping
     // -------------------------------------------------------------------------
 
-    private fun toSseEvent(event: AiAgentEvent): SseEmitter.SseEventBuilder = when (event) {
-        is AiAgentEvent.PlanningStarted  -> SseEmitter.event().name("status")
-            .data(StatusEvent(phase = "start",  message = "Starting meal proposal for: ${event.prompt}"))
-        is AiAgentEvent.SearchingRecipes -> SseEmitter.event().name("status")
-            .data(StatusEvent(phase = "search", message = "Searching for matching recipes"))
-        is AiAgentEvent.RecipesFound     -> SseEmitter.event().name("status")
-            .data(StatusEvent(phase = "search", message = "Found ${event.count} matching recipes"))
-        is AiAgentEvent.LlmCallStarted   -> SseEmitter.event().name("status")
-            .data(StatusEvent(phase = "llm",    message = "Calling LLM (${event.modelName})"))
-        is AiAgentEvent.LlmResponse      -> SseEmitter.event().name("status")
-            .data(StatusEvent(phase = "llm",    message = "LLM responded"))
-        is AiAgentEvent.ResponseToken    -> SseEmitter.event().name("response.token")
-            .data(event.token)
-        is AiAgentEvent.RecipeSelected   -> SseEmitter.event().name("recipe.selected")
-            .data(mapOf("recipeId" to event.recipeId, "name" to event.recipe?.name))
-        is AiAgentEvent.NextActions      -> SseEmitter.event().name("next.actions")
-            .data(event.actions)
-        is AiAgentEvent.PlanReady        -> SseEmitter.event().name("final")
-            .data(event.proposals)
-        is AiAgentEvent.PlanFailed       -> SseEmitter.event().name("error")
-            .data(StatusEvent(phase = "error",  message = event.reason))
-    }
+    private fun toSseEvent(event: AiAgentEvent): SseEmitter.SseEventBuilder =
+        SseEmitter.event().data(toNdJsonLine(event).toString(Charsets.UTF_8).trimEnd())
 
     // -------------------------------------------------------------------------
     // NDJSON line mapping
