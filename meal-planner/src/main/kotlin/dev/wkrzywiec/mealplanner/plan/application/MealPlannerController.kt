@@ -47,69 +47,14 @@ class MealPlannerController(
     )
 
     // -------------------------------------------------------------------------
-    // Batch SSE  (non-streaming LLM call)
+    // Token-streaming SSE  (Accept: text/event-stream)
     // -------------------------------------------------------------------------
 
     @GetMapping(
         path = ["/single/stream"],
-        produces = [MediaType.TEXT_EVENT_STREAM_VALUE],  // Accept: text/event-stream
+        produces = [MediaType.TEXT_EVENT_STREAM_VALUE],
     )
-    fun proposeMealStream(
-        @RequestParam prompt: String,
-    ): ResponseEntity<SseEmitter> {
-        val sseEmitter = SseEmitter(0L)
-        executor.execute {
-            mealPlanner.proposeMeal(prompt) { event ->
-                sseEmitter.send(toSseEvent(event))
-            }
-            sseEmitter.complete()
-        }
-        return ResponseEntity.ok()
-            .contentType(MediaType.TEXT_EVENT_STREAM)
-            .header("Cache-Control", "no-cache")
-            .header("X-Accel-Buffering", "no")
-            .body(sseEmitter)
-    }
-
-    // -------------------------------------------------------------------------
-    // Batch NDJSON  (non-streaming LLM call)
-    // -------------------------------------------------------------------------
-
-    @GetMapping(
-        path = ["/single/stream"],
-        produces = ["application/x-ndjson"],             // Accept: application/x-ndjson
-    )
-    fun proposeMealStreamNdJson(
-        @RequestParam prompt: String,
-    ): ResponseEntity<StreamingResponseBody> {
-        val body = StreamingResponseBody { out: OutputStream ->
-            try {
-                mealPlanner.proposeMeal(prompt) { event ->
-                    out.write(toNdJsonLine(event))
-                    out.flush()
-                }
-            } catch (e: Exception) {
-                log.warn(e) { "NDJSON stream failed" }
-                out.write(toNdJsonLine(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
-                out.flush()
-            }
-        }
-        return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType("application/x-ndjson"))
-            .header("Cache-Control", "no-cache")
-            .header("X-Accel-Buffering", "no")
-            .body(body)
-    }
-
-    // -------------------------------------------------------------------------
-    // Token-streaming SSE  (streaming LLM call — per-token events)
-    // -------------------------------------------------------------------------
-
-    @GetMapping(
-        path = ["/single/stream/tokens"],
-        produces = [MediaType.TEXT_EVENT_STREAM_VALUE],  // Accept: text/event-stream
-    )
-    fun proposeMealStreamTokensSse(
+    fun proposeMealStreamSse(
         @RequestParam prompt: String,
     ): ResponseEntity<SseEmitter> {
         val sseEmitter = SseEmitter(0L)
@@ -119,7 +64,7 @@ class MealPlannerController(
                     sseEmitter.send(toSseEvent(event))
                 }
             } catch (e: Exception) {
-                log.warn(e) { "Token-streaming SSE failed" }
+                log.warn(e) { "SSE stream failed" }
                 sseEmitter.send(toSseEvent(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
             } finally {
                 sseEmitter.complete()
@@ -133,14 +78,14 @@ class MealPlannerController(
     }
 
     // -------------------------------------------------------------------------
-    // Token-streaming NDJSON  (streaming LLM call — per-token events)
+    // Token-streaming NDJSON  (Accept: application/x-ndjson)
     // -------------------------------------------------------------------------
 
     @GetMapping(
-        path = ["/single/stream/tokens"],
-        produces = ["application/x-ndjson"],             // Accept: application/x-ndjson
+        path = ["/single/stream"],
+        produces = ["application/x-ndjson"],
     )
-    fun proposeMealStreamTokensNdJson(
+    fun proposeMealStreamNdJson(
         @RequestParam prompt: String,
     ): ResponseEntity<StreamingResponseBody> {
         val body = StreamingResponseBody { out: OutputStream ->
@@ -150,7 +95,7 @@ class MealPlannerController(
                     out.flush()
                 }
             } catch (e: Exception) {
-                log.warn(e) { "Token-streaming NDJSON failed" }
+                log.warn(e) { "NDJSON stream failed" }
                 out.write(toNdJsonLine(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
                 out.flush()
             }

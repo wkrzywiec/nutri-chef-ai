@@ -100,57 +100,6 @@ class MealPlanner(
         val recipeIds: List<UUID>,
     )
 
-    fun proposeMeal(userPrompt: String, onEvent: (AiAgentEvent) -> Unit) {
-        log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'" }
-        onEvent(AiAgentEvent.PlanningStarted(userPrompt))
-        onEvent(AiAgentEvent.SearchingRecipes())
-
-        val recipes = recipeSearch.findRecipes(userPrompt, 10)
-        log.info { "Found ${recipes.size} recipes with ids: ${recipes.map { it.id }}" }
-        onEvent(AiAgentEvent.RecipesFound(recipes.size))
-        onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
-        log.info { "Calling an AI agent..." }
-        val answer = builder.build().prompt()
-            .system(
-                """
-                You are a nutrition assistant that selects the best fitting recipes for meal planning.
-                
-                TASK: Analyze the provided recipes and select the most suitable ones based on nutritional benefits and user goals. If no specific goal is provided, assume recommendations for a regular healthy adult diet.
-                
-                RESPONSE FORMAT: You must respond with valid JSON in exactly this structure:
-                {
-                  "response": "Brief overall explanation of your selection strategy and nutritional focus",
-                  "nextActions": ["suggested action 1", "suggested action 2"],
-                  "recipes": [
-                    {
-                      "recipeId": "recipe-uuid-here"
-                    }
-                  ]
-                }
-                
-                REQUIREMENTS:
-                - Select 3-5 most suitable recipes from the provided list
-                - Focus on nutritional balance, variety, and health benefits
-                - Suggest 2-3 relevant next actions for the user
-                - Use the exact recipe IDs provided
-                - Respond in the same language as the user's request
-                - Return only valid JSON, no additional text
-                
-                RECIPES: ${recipes.toJson()}
-                """.trimIndent()
-            )
-            .user { u -> u.text("USER_QUERY: \"$userPrompt\"") }
-            .call()
-            .content()
-        log.info { "Response from AI Agent:\n $answer" }
-
-        answer?.let {
-            mapToRawRecipeProposals(it)
-        }?.let {
-            onEvent(AiAgentEvent.PlanReady(mapToRecipeProposals(it, recipes)))
-        }
-    }
-
     fun proposeMeal(userPrompt: String): RecipeProposals? {
         log.info { "Searching for best meal proposals based on user prompt... '$userPrompt'" }
         val recipes = recipeSearch.findRecipes(userPrompt, 10)
