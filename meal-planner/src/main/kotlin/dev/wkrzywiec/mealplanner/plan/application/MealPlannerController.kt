@@ -28,11 +28,22 @@ class MealPlannerController(
         private val log = KotlinLogging.logger {}
     }
 
-    @GetMapping("/single")
+    @GetMapping(
+        path = ["/single"],
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+    )
     fun proposeMeal(
         @RequestParam prompt: String,
     ): ResponseEntity<RecipeProposals> {
-        val proposals = mealPlanner.proposeMeal(prompt)
+        val responseText = StringBuilder()
+        var proposals: RecipeProposals? = null
+        mealPlanner.proposeMealStreaming(prompt) { event ->
+            when (event) {
+                is AiAgentEvent.ResponseToken -> responseText.append(event.token)
+                is AiAgentEvent.PlanReady     -> proposals = event.proposals.copy(response = responseText.toString())
+                else                          -> Unit
+            }
+        }
         return ResponseEntity.ok(proposals)
     }
 
@@ -51,10 +62,10 @@ class MealPlannerController(
     // -------------------------------------------------------------------------
 
     @GetMapping(
-        path = ["/single/stream"],
+        path = ["/single"],
         produces = [MediaType.TEXT_EVENT_STREAM_VALUE],
     )
-    fun proposeMealStreamSse(
+    fun proposeMealSse(
         @RequestParam prompt: String,
     ): ResponseEntity<SseEmitter> {
         val sseEmitter = SseEmitter(0L)
@@ -82,10 +93,10 @@ class MealPlannerController(
     // -------------------------------------------------------------------------
 
     @GetMapping(
-        path = ["/single/stream"],
+        path = ["/single"],
         produces = ["application/x-ndjson"],
     )
-    fun proposeMealStreamNdJson(
+    fun proposeMealNdJson(
         @RequestParam prompt: String,
     ): ResponseEntity<StreamingResponseBody> {
         val body = StreamingResponseBody { out: OutputStream ->
