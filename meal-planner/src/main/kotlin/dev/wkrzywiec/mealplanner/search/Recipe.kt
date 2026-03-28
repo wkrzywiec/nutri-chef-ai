@@ -14,6 +14,12 @@ data class Recipe(
     val similarityScore: Double? = null,
 )
 
-data class Ingredients(val section: String, val ingredients: List<String>)
+data class Ingredients(
+    val section: String,
+    val ingredients: List<String>,
+)
 
-data class Instruction(val section: String, val steps: List<String>)
+data class Instruction(
+    val section: String,
+    val steps: List<String>,
+)

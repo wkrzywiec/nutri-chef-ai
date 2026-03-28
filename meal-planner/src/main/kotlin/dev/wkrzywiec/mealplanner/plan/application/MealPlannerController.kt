@@ -22,7 +22,6 @@ class MealPlannerController(
     private val mealPlanner: MealPlanner,
     private val mapper: AiAgentEventMapper,
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
     }
@@ -41,14 +40,15 @@ class MealPlannerController(
         mealPlanner.proposeMealStreaming(prompt) { event ->
             when (event) {
                 is AiAgentEvent.ResponseToken -> responseText.append(event.token)
-                is AiAgentEvent.PlanReady     -> proposals = event.proposals.copy(response = responseText.toString())
-                else                          -> Unit
+                is AiAgentEvent.PlanReady -> proposals = event.proposals.copy(response = responseText.toString())
+                else -> Unit
             }
         }
-        val finalProposals = proposals ?: run {
-            log.error { "Meal planning stream completed without producing a PlanReady event for prompt='$prompt'" }
-            throw IllegalStateException("Failed to generate meal plan for the given prompt")
-        }
+        val finalProposals =
+            proposals ?: run {
+                log.error { "Meal planning stream completed without producing a PlanReady event for prompt='$prompt'" }
+                throw IllegalStateException("Failed to generate meal plan for the given prompt")
+            }
         return ResponseEntity.ok(finalProposals)
     }
 
@@ -76,7 +76,8 @@ class MealPlannerController(
                 sseEmitter.complete()
             }
         }
-        return ResponseEntity.ok()
+        return ResponseEntity
+            .ok()
             .contentType(MediaType.TEXT_EVENT_STREAM)
             .header("Cache-Control", "no-cache")
             .header("X-Accel-Buffering", "no")
@@ -90,19 +91,21 @@ class MealPlannerController(
     fun proposeMealNdJson(
         @RequestParam prompt: String,
     ): ResponseEntity<StreamingResponseBody> {
-        val body = StreamingResponseBody { out: OutputStream ->
-            try {
-                mealPlanner.proposeMealStreaming(prompt) { event ->
-                    out.write(mapper.toNdJsonLine(event))
+        val body =
+            StreamingResponseBody { out: OutputStream ->
+                try {
+                    mealPlanner.proposeMealStreaming(prompt) { event ->
+                        out.write(mapper.toNdJsonLine(event))
+                        out.flush()
+                    }
+                } catch (e: Exception) {
+                    log.warn(e) { "NDJSON stream failed" }
+                    out.write(mapper.toNdJsonLine(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
                     out.flush()
                 }
-            } catch (e: Exception) {
-                log.warn(e) { "NDJSON stream failed" }
-                out.write(mapper.toNdJsonLine(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
-                out.flush()
             }
-        }
-        return ResponseEntity.ok()
+        return ResponseEntity
+            .ok()
             .contentType(MediaType.parseMediaType("application/x-ndjson"))
             .header("Cache-Control", "no-cache")
             .header("X-Accel-Buffering", "no")
