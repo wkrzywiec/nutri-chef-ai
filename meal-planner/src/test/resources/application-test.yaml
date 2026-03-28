@@ -1,0 +1,10 @@
+spring:
+  liquibase:
+    enabled: true
+  ai:
+    openai:
+      api-key: test-key
+      chat:
+        options:
+          model: "gpt-4o-mini"
+          temperature: 0

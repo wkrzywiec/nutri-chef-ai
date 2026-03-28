@@ -37,6 +37,10 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("dev.mokksy.aimocks:ai-mocks-openai-jvm:0.7.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
