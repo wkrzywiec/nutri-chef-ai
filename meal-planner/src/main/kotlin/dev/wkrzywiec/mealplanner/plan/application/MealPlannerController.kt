@@ -27,6 +27,8 @@ class MealPlannerController(
         private val log = KotlinLogging.logger {}
     }
 
+    private val executor: Executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
     @GetMapping(
         path = ["/single"],
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -43,15 +45,12 @@ class MealPlannerController(
                 else                          -> Unit
             }
         }
-        return ResponseEntity.ok(proposals)
+        val finalProposals = proposals ?: run {
+            log.error { "Meal planning stream completed without producing a PlanReady event for prompt='$prompt'" }
+            throw IllegalStateException("Failed to generate meal plan for the given prompt")
+        }
+        return ResponseEntity.ok(finalProposals)
     }
-
-    // Keep this controller self-contained. For production usage, inject a TaskExecutor.
-    private val executor: Executor = Executors.newCachedThreadPool()
-
-    // -------------------------------------------------------------------------
-    // Token-streaming SSE  (Accept: text/event-stream)
-    // -------------------------------------------------------------------------
 
     @GetMapping(
         path = ["/single"],
@@ -68,7 +67,11 @@ class MealPlannerController(
                 }
             } catch (e: Exception) {
                 log.warn(e) { "SSE stream failed" }
-                sseEmitter.send(mapper.toSseEvent(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
+                try {
+                    sseEmitter.send(mapper.toSseEvent(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
+                } catch (sendException: Exception) {
+                    log.debug(sendException) { "Failed to send SSE error event after stream failure" }
+                }
             } finally {
                 sseEmitter.complete()
             }
@@ -79,10 +82,6 @@ class MealPlannerController(
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
     }
-
-    // -------------------------------------------------------------------------
-    // Token-streaming NDJSON  (Accept: application/x-ndjson)
-    // -------------------------------------------------------------------------
 
     @GetMapping(
         path = ["/single"],

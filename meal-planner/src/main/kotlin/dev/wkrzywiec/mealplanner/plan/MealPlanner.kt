@@ -79,9 +79,16 @@ class MealPlanner(
             .content()
         log.info { "Recipe selection from LLM:\n$selectionAnswer" }
 
+
+
         val selection = selectionAnswer
             ?.let { runCatching { it.toObject<RawSelection>() }.getOrNull() }
-            ?: return
+
+        if (selection == null) {
+            log.warn { "Failed to parse recipe selection from LLM response: $selectionAnswer" }
+            onEvent(AiAgentEvent.PlanFailed("Failed to parse recipe selection from AI response. Please try again."))
+            return
+        }
 
         onEvent(AiAgentEvent.NextActions(selection.nextActions))
 
