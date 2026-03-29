@@ -41,6 +41,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("dev.mokksy.aimocks:ai-mocks-openai-jvm:0.7.2")
+    testImplementation("io.rest-assured:rest-assured:5.5.7")
+    testImplementation("io.rest-assured:kotlin-extensions:5.5.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
