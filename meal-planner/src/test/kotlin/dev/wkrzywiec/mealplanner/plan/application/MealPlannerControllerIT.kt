@@ -1,8 +1,7 @@
 package dev.wkrzywiec.mealplanner.plan.application
 
 import dev.mokksy.aimocks.openai.MockOpenai
-import dev.wkrzywiec.mealplanner.search.EmbeddingEngine
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
 import io.restassured.RestAssured
 import io.restassured.filter.log.RequestLoggingFilter
 import io.restassured.filter.log.ResponseLoggingFilter
@@ -16,14 +15,15 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
-import org.springframework.ai.embedding.EmbeddingModel
-import org.springframework.ai.openai.OpenAiEmbeddingModel
-import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -35,7 +35,15 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Testcontainers
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@Import(MealPlannerControllerIT.EmbeddingTestConfig::class)
 class MealPlannerControllerIT {
+
+    @TestConfiguration
+    class EmbeddingTestConfig {
+        @Bean
+        @Primary
+        fun embeddingEngine(): FakeOpenAIEmbeddingEngine = FakeOpenAIEmbeddingEngine(openai)
+    }
 
     companion object {
 
@@ -81,13 +89,16 @@ class MealPlannerControllerIT {
     @Autowired
     private lateinit var jdbcTemplate: JdbcTemplate
 
+    @Autowired
+    private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
+
     @BeforeEach
     fun setUp(testInfo: TestInfo) {
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
         RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
         insertTestRecipe()
-        stubOpenAiEmbedding()
+        fakeEmbeddingEngine.stubEmbedding(testEmbedding)
         stubOpenAiChatCalls()
     }
 
@@ -179,16 +190,6 @@ class MealPlannerControllerIT {
     }
 
     // ---- MockOpenai stubs -------------------------------------------------
-
-    private fun stubOpenAiEmbedding() {
-        // Embedding call: OpenAIEmbeddingEngine embeds the user prompt before the DB search.
-        // We return the same vector stored in recipe_embeddings so cosine distance is 0.
-        openai.embeddings {
-            model = "text-embedding-3-small"
-        } responds {
-            embeddings(testEmbedding.toList())
-        }
-    }
 
     private fun stubOpenAiChatCalls() {
         // Call 1: streaming narrative – system prompt contains the "explanation" phrase

@@ -2,8 +2,10 @@ package dev.wkrzywiec.mealplanner.search
 
 import dev.mokksy.aimocks.openai.MockOpenai
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.ai.document.MetadataMode
 import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.ai.openai.OpenAiEmbeddingModel
+import org.springframework.ai.openai.OpenAiEmbeddingOptions
 import org.springframework.ai.openai.api.OpenAiApi
 
 class FakeOpenAIEmbeddingEngine(
@@ -18,8 +20,12 @@ class FakeOpenAIEmbeddingEngine(
         OpenAiApi
             .builder()
             .apiKey("demo-key")
-            .baseUrl(openaiMock.baseUrl())
-            .build()
+            .baseUrl(openaiMock.baseUrl().removeSuffix("/v1"))
+            .build(),
+        MetadataMode.EMBED,
+        OpenAiEmbeddingOptions.builder()
+            .model("text-embedding-3-small")
+            .build(),
     )
 
     override fun embed(prompt: String): FloatArray {
