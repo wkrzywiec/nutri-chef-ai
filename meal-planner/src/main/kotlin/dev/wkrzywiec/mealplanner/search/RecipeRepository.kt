@@ -52,8 +52,8 @@ class RecipeRepository(
         return jdbcTemplate.query(sql, params, rowMapper())
     }
 
-    fun rowMapper() =
-        RowMapper<Recipe> { rs, _ ->
+    private fun rowMapper() =
+        RowMapper { rs, _ ->
             Recipe(
                 id = UUID.fromString(rs.getString("recipe_id")),
                 name = rs.getString("name"),
@@ -99,8 +99,8 @@ class RecipeRepository(
         return jdbcTemplate.query(sql, params, rowMapperWithoutSimilarityScore())
     }
 
-    fun rowMapperWithoutSimilarityScore() =
-        RowMapper<Recipe> { rs, _ ->
+    private fun rowMapperWithoutSimilarityScore() =
+        RowMapper{ rs, _ ->
             Recipe(
                 id = UUID.fromString(rs.getString("recipe_id")),
                 name = rs.getString("name"),

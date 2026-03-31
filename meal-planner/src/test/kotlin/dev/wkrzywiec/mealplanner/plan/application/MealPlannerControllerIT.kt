@@ -93,7 +93,7 @@ class MealPlannerControllerIT {
     private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
 
     @BeforeEach
-    fun setUp(testInfo: TestInfo) {
+    fun setUp() {
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
         RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
@@ -107,8 +107,6 @@ class MealPlannerControllerIT {
         jdbcTemplate.execute("DELETE FROM recipe_embeddings WHERE recipe_id = '$recipeId'")
         jdbcTemplate.execute("DELETE FROM recipe WHERE id = '$recipeId'")
     }
-
-    // ---- Tests ------------------------------------------------------------
 
     @Test
     fun `GET single returns JSON meal plan`() {
@@ -161,8 +159,6 @@ class MealPlannerControllerIT {
         assertThat(lines).isNotEmpty()
         lines.forEach { line -> assertThat(line).startsWith("{") }
     }
-
-    // ---- DB helpers -------------------------------------------------------
 
     private fun insertTestRecipe() {
         jdbcTemplate.execute(
