@@ -1,6 +1,5 @@
 package dev.wkrzywiec.mealplanner.search
 
-import dev.wkrzywiec.mealplanner.shared.config.toJson
 import java.util.UUID
 
 class RecipeTestData private constructor() {
@@ -81,32 +80,11 @@ class RecipeTestData private constructor() {
     )
 
     fun getId(): UUID = id
-
-    fun toRecipeInsertSql(): String =
-        """
-        INSERT INTO recipe (id, name, description, source, source_url, servings, ingredients, instructions, tags)
-        VALUES (
-            '$id',
-            '${name.replace("'", "''")}',
-            '${description?.replace("'", "''") ?: ""}',
-            'test',
-            '${sourceUrl ?: ""}',
-            '${servings ?: ""}',
-            '${ingredients.toJson()}',
-            '${instructions.toJson()}',
-            '${tags.toJson()}'
-        )
-        """.trimIndent()
-
-    fun toEmbeddingInsertSql(embeddingLiteral: String): String =
-        """
-        INSERT INTO recipe_embeddings (recipe_id, embedding)
-        VALUES ('$id', '$embeddingLiteral')
-        """.trimIndent()
-
-    fun toRecipeDeleteSql(): String =
-        "DELETE FROM recipe WHERE id = '$id'"
-
-    fun toEmbeddingDeleteSql(): String =
-        "DELETE FROM recipe_embeddings WHERE recipe_id = '$id'"
+    fun getName(): String = name
+    fun getDescription(): String? = description
+    fun getIngredients(): List<Ingredients> = ingredients
+    fun getInstructions(): List<Instruction> = instructions
+    fun getSourceUrl(): String? = sourceUrl
+    fun getServings(): String? = servings
+    fun getTags(): List<String> = tags
 }

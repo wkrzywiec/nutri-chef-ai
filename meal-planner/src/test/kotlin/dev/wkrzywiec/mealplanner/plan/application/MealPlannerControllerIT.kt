@@ -2,8 +2,8 @@ package dev.wkrzywiec.mealplanner.plan.application
 
 import dev.mokksy.aimocks.openai.MockOpenai
 import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
-import dev.wkrzywiec.mealplanner.search.RecipeTestData
 import dev.wkrzywiec.mealplanner.search.RecipeTestData.Companion.aRecipe
+import dev.wkrzywiec.mealplanner.search.TestRepository
 import io.restassured.RestAssured
 import io.restassured.filter.log.RequestLoggingFilter
 import io.restassured.filter.log.ResponseLoggingFilter
@@ -66,7 +66,7 @@ class MealPlannerControllerIT {
 
         private val openai = MockOpenai()
 
-        val testRecipe: RecipeTestData = aRecipe()
+        val testRecipe = aRecipe()
 
         @JvmStatic
         @AfterAll
@@ -92,20 +92,22 @@ class MealPlannerControllerIT {
     @Autowired
     private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
 
+    private lateinit var testRepository: TestRepository
+
     @BeforeEach
     fun setUp() {
+        testRepository = TestRepository(jdbcTemplate)
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
         RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
-        insertTestRecipe()
+        testRepository.save(testRecipe, testEmbeddingLiteral)
         fakeEmbeddingEngine.stubEmbedding(testEmbedding)
         stubOpenAiChatCalls()
     }
 
     @AfterEach
     fun tearDown() {
-        jdbcTemplate.execute(testRecipe.toEmbeddingDeleteSql())
-        jdbcTemplate.execute(testRecipe.toRecipeDeleteSql())
+        testRepository.deleteAll()
     }
 
     @Test
@@ -158,11 +160,6 @@ class MealPlannerControllerIT {
         val lines = body.lines().filter { it.isNotBlank() }
         assertThat(lines).isNotEmpty()
         lines.forEach { line -> assertThat(line).startsWith("{") }
-    }
-
-    private fun insertTestRecipe() {
-        jdbcTemplate.execute(testRecipe.toRecipeInsertSql())
-        jdbcTemplate.execute(testRecipe.toEmbeddingInsertSql(testEmbeddingLiteral))
     }
 
     // ---- MockOpenai stubs -------------------------------------------------
