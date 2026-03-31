@@ -3,6 +3,7 @@ package dev.wkrzywiec.mealplanner.plan.application
 import dev.mokksy.aimocks.openai.MockOpenai
 import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
 import dev.wkrzywiec.mealplanner.search.RecipeTestData.Companion.aRecipe
+import dev.wkrzywiec.mealplanner.search.TestConfig
 import dev.wkrzywiec.mealplanner.search.TestRepository
 import io.restassured.RestAssured
 import io.restassured.filter.log.RequestLoggingFilter
@@ -24,8 +25,6 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
-import org.springframework.context.annotation.Primary
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
@@ -35,14 +34,13 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Testcontainers
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Import(MealPlannerControllerIT.EmbeddingTestConfig::class)
+@Import(MealPlannerControllerIT.MockOpenaiConfig::class, TestConfig::class)
 class MealPlannerControllerIT {
 
     @TestConfiguration
-    class EmbeddingTestConfig {
+    class MockOpenaiConfig {
         @Bean
-        @Primary
-        fun embeddingEngine(): FakeOpenAIEmbeddingEngine = FakeOpenAIEmbeddingEngine(openai)
+        fun mockOpenai(): MockOpenai = openai
     }
 
     companion object {
@@ -87,16 +85,13 @@ class MealPlannerControllerIT {
     private var port: Int = 0
 
     @Autowired
-    private lateinit var jdbcTemplate: JdbcTemplate
+    private lateinit var testRepository: TestRepository
 
     @Autowired
     private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
 
-    private lateinit var testRepository: TestRepository
-
     @BeforeEach
     fun setUp() {
-        testRepository = TestRepository(jdbcTemplate)
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
         RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())

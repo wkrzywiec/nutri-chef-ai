@@ -22,6 +22,19 @@ class RecipeTestData private constructor() {
         fun aRecipe(): RecipeTestData = RecipeTestData()
     }
 
+
+    fun domain(): Recipe = Recipe(
+        id = id,
+        name = name,
+        description = description,
+        ingredients = ingredients,
+        instructions = instructions,
+        sourceUrl = sourceUrl,
+        servings = servings,
+        tags = tags,
+        similarityScore = similarityScore,
+    )
+
     fun withId(id: UUID): RecipeTestData {
         this.id = id
         return this
@@ -66,18 +79,6 @@ class RecipeTestData private constructor() {
         this.similarityScore = similarityScore
         return this
     }
-
-    fun domain(): Recipe = Recipe(
-        id = id,
-        name = name,
-        description = description,
-        ingredients = ingredients,
-        instructions = instructions,
-        sourceUrl = sourceUrl,
-        servings = servings,
-        tags = tags,
-        similarityScore = similarityScore,
-    )
 
     fun getId(): UUID = id
     fun getName(): String = name
