@@ -2,6 +2,8 @@ package dev.wkrzywiec.mealplanner.plan.application
 
 import dev.mokksy.aimocks.openai.MockOpenai
 import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
+import dev.wkrzywiec.mealplanner.search.RecipeTestData
+import dev.wkrzywiec.mealplanner.search.RecipeTestData.Companion.aRecipe
 import io.restassured.RestAssured
 import io.restassured.filter.log.RequestLoggingFilter
 import io.restassured.filter.log.ResponseLoggingFilter
@@ -14,7 +16,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -30,7 +31,6 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
 @Testcontainers
@@ -66,7 +66,7 @@ class MealPlannerControllerIT {
 
         private val openai = MockOpenai()
 
-        val recipeId: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        val testRecipe: RecipeTestData = aRecipe()
 
         @JvmStatic
         @AfterAll
@@ -104,8 +104,8 @@ class MealPlannerControllerIT {
 
     @AfterEach
     fun tearDown() {
-        jdbcTemplate.execute("DELETE FROM recipe_embeddings WHERE recipe_id = '$recipeId'")
-        jdbcTemplate.execute("DELETE FROM recipe WHERE id = '$recipeId'")
+        jdbcTemplate.execute(testRecipe.toEmbeddingDeleteSql())
+        jdbcTemplate.execute(testRecipe.toRecipeDeleteSql())
     }
 
     @Test
@@ -161,28 +161,8 @@ class MealPlannerControllerIT {
     }
 
     private fun insertTestRecipe() {
-        jdbcTemplate.execute(
-            """
-            INSERT INTO recipe (id, name, description, source, source_url, servings, ingredients, instructions, tags)
-            VALUES (
-                '$recipeId',
-                'Grilled Chicken Salad',
-                'A healthy grilled chicken salad',
-                'test',
-                'https://example.com/grilled-chicken-salad',
-                '2 servings',
-                '[{"section":"Main","ingredients":["chicken breast","lettuce","tomato"]}]',
-                '[{"section":"Cook","steps":["Grill chicken","Toss salad"]}]',
-                '["healthy","salad"]'
-            )
-            """.trimIndent(),
-        )
-        jdbcTemplate.execute(
-            """
-            INSERT INTO recipe_embeddings (recipe_id, embedding)
-            VALUES ('$recipeId', '$testEmbeddingLiteral')
-            """.trimIndent(),
-        )
+        jdbcTemplate.execute(testRecipe.toRecipeInsertSql())
+        jdbcTemplate.execute(testRecipe.toEmbeddingInsertSql(testEmbeddingLiteral))
     }
 
     // ---- MockOpenai stubs -------------------------------------------------
@@ -204,7 +184,7 @@ class MealPlannerControllerIT {
             userMessageContains("healthy meal")
         } responds {
             assistantContent =
-                """{"nextActions":["Buy groceries","Prep ingredients"],"recipeIds":["$recipeId"]}"""
+                """{"nextActions":["Buy groceries","Prep ingredients"],"recipeIds":["${testRecipe.getId()}"]}"""
             finishReason = "stop"
         }
     }
