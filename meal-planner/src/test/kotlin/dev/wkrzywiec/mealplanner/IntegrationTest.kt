@@ -52,7 +52,7 @@ abstract class IntegrationTest {
     }
 
     @BeforeEach
-    fun setUp() {
+    fun setUpIntegrationTest() {
         testRepository.clean()
     }
 }

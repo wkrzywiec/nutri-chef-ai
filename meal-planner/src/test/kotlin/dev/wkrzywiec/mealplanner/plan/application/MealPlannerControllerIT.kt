@@ -45,7 +45,7 @@ class MealPlannerControllerIT : IntegrationTest() {
     private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
 
     @BeforeEach
-    override fun setUp() {
+    fun setUp() {
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
         RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
