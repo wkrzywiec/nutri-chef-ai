@@ -3,9 +3,13 @@ package dev.wkrzywiec.mealplanner.search
 import dev.wkrzywiec.mealplanner.shared.config.toJson
 import org.springframework.jdbc.core.JdbcTemplate
 
-class TestRepository(private val jdbcTemplate: JdbcTemplate) {
-
-    fun save(recipe: RecipeTestData, embeddingLiteral: String) {
+class TestRepository(
+    private val jdbcTemplate: JdbcTemplate,
+) {
+    fun save(
+        recipe: RecipeTestData,
+        embeddingLiteral: String,
+    ) {
         jdbcTemplate.update(
             """
             INSERT INTO recipe (id, name, description, source, source_url, servings, ingredients, instructions, tags)
@@ -29,7 +33,7 @@ class TestRepository(private val jdbcTemplate: JdbcTemplate) {
         }
     }
 
-    fun deleteAll() {
+    fun clean() {
         jdbcTemplate.execute("TRUNCATE recipe_scraper, recipe_ingredient, recipe_embeddings, recipe")
     }
 }

@@ -100,7 +100,7 @@ class RecipeRepository(
     }
 
     private fun rowMapperWithoutSimilarityScore() =
-        RowMapper{ rs, _ ->
+        RowMapper { rs, _ ->
             Recipe(
                 id = UUID.fromString(rs.getString("recipe_id")),
                 name = rs.getString("name"),

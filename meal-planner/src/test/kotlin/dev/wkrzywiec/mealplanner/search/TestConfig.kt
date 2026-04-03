@@ -11,7 +11,6 @@ class TestConfig(
     private val jdbcTemplate: JdbcTemplate,
     private val openai: MockOpenai,
 ) {
-
     @Bean
     fun testRepository(): TestRepository = TestRepository(jdbcTemplate)
 

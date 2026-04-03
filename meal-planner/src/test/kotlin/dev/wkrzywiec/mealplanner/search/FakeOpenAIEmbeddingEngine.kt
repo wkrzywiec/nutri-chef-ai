@@ -10,32 +10,33 @@ import org.springframework.ai.openai.api.OpenAiApi
 
 class FakeOpenAIEmbeddingEngine(
     private val openaiMock: MockOpenai,
-): EmbeddingEngine {
-
+) : EmbeddingEngine {
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
-    private val embeddingModel: EmbeddingModel = OpenAiEmbeddingModel(
-        OpenAiApi
-            .builder()
-            .apiKey("demo-key")
-            .baseUrl(openaiMock.baseUrl().removeSuffix("/v1"))
-            .build(),
-        MetadataMode.EMBED,
-        OpenAiEmbeddingOptions.builder()
-            .model("text-embedding-3-small")
-            .build(),
-    )
+    private val embeddingModel: EmbeddingModel =
+        OpenAiEmbeddingModel(
+            OpenAiApi
+                .builder()
+                .apiKey("demo-key")
+                .baseUrl(openaiMock.baseUrl().removeSuffix("/v1"))
+                .build(),
+            MetadataMode.EMBED,
+            OpenAiEmbeddingOptions
+                .builder()
+                .model("text-embedding-3-small")
+                .build(),
+        )
 
     override fun embed(prompt: String): FloatArray {
-        log.info {"Embedding OpenAI stub for prompt '$prompt'..."}
+        log.info { "Embedding OpenAI stub for prompt '$prompt'..." }
         val response = embeddingModel.embedForResponse(listOf(prompt))
         return response.result.output
     }
 
     fun stubEmbedding(testEmbedding: FloatArray) {
-        log.info {"Stubbing OpenAI embedding..."}
+        log.info { "Stubbing OpenAI embedding..." }
         openaiMock.embeddings {
             model = "text-embedding-3-small"
         } responds {

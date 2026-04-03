@@ -3,16 +3,17 @@ package dev.wkrzywiec.mealplanner.search
 import java.util.UUID
 
 class RecipeTestData private constructor() {
-
     private var id: UUID = UUID.randomUUID()
     private var name: String = "Grilled Chicken Salad"
     private var description: String? = "A healthy grilled chicken salad"
-    private var ingredients: List<Ingredients> = listOf(
-        Ingredients(section = "Main", ingredients = listOf("chicken breast", "lettuce", "tomato"))
-    )
-    private var instructions: List<Instruction> = listOf(
-        Instruction(section = "Cook", steps = listOf("Grill chicken", "Toss salad"))
-    )
+    private var ingredients: List<Ingredients> =
+        listOf(
+            Ingredients(section = "Main", ingredients = listOf("chicken breast", "lettuce", "tomato")),
+        )
+    private var instructions: List<Instruction> =
+        listOf(
+            Instruction(section = "Cook", steps = listOf("Grill chicken", "Toss salad")),
+        )
     private var sourceUrl: String? = "https://example.com/grilled-chicken-salad"
     private var servings: String? = "2 servings"
     private var tags: List<String> = listOf("healthy", "salad")
@@ -22,18 +23,18 @@ class RecipeTestData private constructor() {
         fun aRecipe(): RecipeTestData = RecipeTestData()
     }
 
-
-    fun domain(): Recipe = Recipe(
-        id = id,
-        name = name,
-        description = description,
-        ingredients = ingredients,
-        instructions = instructions,
-        sourceUrl = sourceUrl,
-        servings = servings,
-        tags = tags,
-        similarityScore = similarityScore,
-    )
+    fun domain(): Recipe =
+        Recipe(
+            id = id,
+            name = name,
+            description = description,
+            ingredients = ingredients,
+            instructions = instructions,
+            sourceUrl = sourceUrl,
+            servings = servings,
+            tags = tags,
+            similarityScore = similarityScore,
+        )
 
     fun withId(id: UUID): RecipeTestData {
         this.id = id
@@ -81,11 +82,18 @@ class RecipeTestData private constructor() {
     }
 
     fun getId(): UUID = id
+
     fun getName(): String = name
+
     fun getDescription(): String? = description
+
     fun getIngredients(): List<Ingredients> = ingredients
+
     fun getInstructions(): List<Instruction> = instructions
+
     fun getSourceUrl(): String? = sourceUrl
+
     fun getServings(): String? = servings
+
     fun getTags(): List<String> = tags
 }
