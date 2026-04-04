@@ -28,15 +28,16 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
     @Test
     fun `GET single returns JSON meal plan`() {
         val testRecipe = aRecipe()
+        val prompt = "json meal plan"
 
         testRepository.save(testRecipe)
         fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
-        stubOpenAiChatCalls(testRecipe)
+        stubOpenAiChatCalls(testRecipe, prompt)
 
         val body =
             Given {
                 accept("application/json")
-                queryParam("prompt", "healthy meal")
+                queryParam("prompt", prompt)
             } When {
                 get("/api/planner/single")
             } Then {
@@ -53,14 +54,15 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
     @Test
     fun `GET single with SSE accept header streams events`() {
         val testRecipe = aRecipe()
+        val prompt = "sse meal plan"
 
         testRepository.save(testRecipe)
         fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
-        stubOpenAiChatCalls(testRecipe)
+        stubOpenAiChatCalls(testRecipe, prompt)
 
         Given {
             accept("text/event-stream")
-            queryParam("prompt", "healthy meal")
+            queryParam("prompt", prompt)
         } When {
             get("/api/planner/single")
         } Then {
@@ -72,15 +74,16 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
     @Test
     fun `GET single with ndjson accept header streams ndjson lines`() {
         val testRecipe = aRecipe()
+        val prompt = "ndjson meal plan"
 
         testRepository.save(testRecipe)
         fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
-        stubOpenAiChatCalls(testRecipe)
+        stubOpenAiChatCalls(testRecipe, prompt)
 
         val body =
             Given {
                 accept("application/x-ndjson")
-                queryParam("prompt", "healthy meal")
+                queryParam("prompt", prompt)
             } When {
                 get("/api/planner/single")
             } Then {
@@ -97,11 +100,14 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     // ---- MockOpenai stubs -------------------------------------------------
 
-    private fun stubOpenAiChatCalls(testRecipe: RecipeTestData) {
+    private fun stubOpenAiChatCalls(
+        testRecipe: RecipeTestData,
+        prompt: String,
+    ) {
         // Call 1: streaming narrative – system prompt contains the "explanation" phrase
         openai.completion {
             systemMessageContains("brief overall explanation")
-            userMessageContains("healthy meal")
+            userMessageContains(prompt)
         } respondsStream {
             responseChunks = listOf("Here", " is", " a", " healthy", " meal", " plan.")
             finishReason = "stop"
@@ -111,7 +117,7 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
         // Call 2: batch JSON selection – system prompt contains "RESPONSE FORMAT"
         openai.completion {
             systemMessageContains("RESPONSE FORMAT")
-            userMessageContains("healthy meal")
+            userMessageContains(prompt)
         } responds {
             assistantContent =
                 """{"nextActions":["Buy groceries","Prep ingredients"],"recipeIds":["${testRecipe.getId()}"]}"""
