@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.time.Duration.Companion.milliseconds
 
-class MealPlannerControllerIT : IntegrationTest() {
+class MealPlannerControllerComponentTest : IntegrationTest() {
     companion object {
         private const val EMBEDDING_DIM = 1536
 
