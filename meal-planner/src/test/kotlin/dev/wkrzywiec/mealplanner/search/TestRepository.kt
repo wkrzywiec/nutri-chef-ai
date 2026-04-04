@@ -6,10 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 class TestRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    fun save(
-        recipe: RecipeTestData,
-        embeddingLiteral: String,
-    ) {
+    fun save(recipe: RecipeTestData) {
         jdbcTemplate.update(
             """
             INSERT INTO recipe (id, name, description, source, source_url, servings, ingredients, instructions, tags)
@@ -29,7 +26,7 @@ class TestRepository(
             "INSERT INTO recipe_embeddings (recipe_id, embedding) VALUES (CAST(? AS uuid), CAST(? AS vector))",
         ) { ps ->
             ps.setString(1, recipe.getId().toString())
-            ps.setString(2, embeddingLiteral)
+            ps.setString(2, recipe.literalEmbedding())
         }
     }
 

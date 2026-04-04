@@ -36,6 +36,10 @@ class RecipeTestData private constructor() {
             similarityScore = similarityScore,
         )
 
+    fun embedding(): FloatArray = FloatArray(1536).also { it[0] = 1.0f }
+
+    fun literalEmbedding(): String = embedding().joinToString(separator = ",", prefix = "[", postfix = "]")
+
     fun withId(id: UUID): RecipeTestData {
         this.id = id
         return this

@@ -3,6 +3,7 @@ package dev.wkrzywiec.mealplanner.plan.application
 import dev.mokksy.aimocks.openai.MockOpenai
 import dev.wkrzywiec.mealplanner.IntegrationTest
 import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
+import dev.wkrzywiec.mealplanner.search.RecipeTestData
 import dev.wkrzywiec.mealplanner.search.RecipeTestData.Companion.aRecipe
 import dev.wkrzywiec.mealplanner.search.TestRepository
 import io.restassured.module.kotlin.extensions.Extract
@@ -15,18 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import kotlin.time.Duration.Companion.milliseconds
 
 class MealPlannerControllerComponentTest : IntegrationTest() {
-    companion object {
-        private const val EMBEDDING_DIM = 1536
-
-        private val testEmbedding: FloatArray =
-            FloatArray(EMBEDDING_DIM).also { it[0] = 1.0f }
-
-        private val testEmbeddingLiteral: String =
-            testEmbedding.joinToString(separator = ",", prefix = "[", postfix = "]")
-
-        val testRecipe = aRecipe()
-    }
-
     @Autowired
     private lateinit var testRepository: TestRepository
 
@@ -38,9 +27,11 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     @Test
     fun `GET single returns JSON meal plan`() {
-        testRepository.save(testRecipe, testEmbeddingLiteral)
-        fakeEmbeddingEngine.stubEmbedding(testEmbedding)
-        stubOpenAiChatCalls()
+        val testRecipe = aRecipe()
+
+        testRepository.save(testRecipe)
+        fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
+        stubOpenAiChatCalls(testRecipe)
 
         val body =
             Given {
@@ -61,9 +52,11 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     @Test
     fun `GET single with SSE accept header streams events`() {
-        testRepository.save(testRecipe, testEmbeddingLiteral)
-        fakeEmbeddingEngine.stubEmbedding(testEmbedding)
-        stubOpenAiChatCalls()
+        val testRecipe = aRecipe()
+
+        testRepository.save(testRecipe)
+        fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
+        stubOpenAiChatCalls(testRecipe)
 
         Given {
             accept("text/event-stream")
@@ -78,9 +71,11 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     @Test
     fun `GET single with ndjson accept header streams ndjson lines`() {
-        testRepository.save(testRecipe, testEmbeddingLiteral)
-        fakeEmbeddingEngine.stubEmbedding(testEmbedding)
-        stubOpenAiChatCalls()
+        val testRecipe = aRecipe()
+
+        testRepository.save(testRecipe)
+        fakeEmbeddingEngine.stubEmbedding(testRecipe.embedding())
+        stubOpenAiChatCalls(testRecipe)
 
         val body =
             Given {
@@ -102,7 +97,7 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     // ---- MockOpenai stubs -------------------------------------------------
 
-    private fun stubOpenAiChatCalls() {
+    private fun stubOpenAiChatCalls(testRecipe: RecipeTestData) {
         // Call 1: streaming narrative – system prompt contains the "explanation" phrase
         openai.completion {
             systemMessageContains("brief overall explanation")
