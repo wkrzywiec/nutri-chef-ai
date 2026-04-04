@@ -39,12 +39,13 @@ class MealPlanner(
         log.info { "Streaming meal proposals for prompt '$userPrompt'" }
         onEvent(AiAgentEvent.PlanningStarted(userPrompt))
 
-        // Step 0: stream a brief acknowledgement so the user knows the input was received
-        log.info { "Streaming acknowledgement from LLM..." }
-        onEvent(AiAgentEvent.LlmCallStarted("meal-planner"))
+        // Step 0: stream a brief acknowledgement so the user knows the input was received (low-cost model)
+        log.info { "Streaming acknowledgement from LLM (low-cost model: $lowCostModel)..." }
+        onEvent(AiAgentEvent.LlmCallStarted(lowCostModel))
         builder
             .build()
             .prompt()
+            .options(OpenAiChatOptions.builder().model(lowCostModel).build())
             .system(
                 """
                 You are a nutrition assistant. The user has just submitted a meal planning request.
