@@ -3,11 +3,15 @@ package dev.wkrzywiec.mealplanner
 import dev.mokksy.aimocks.openai.MockOpenai
 import dev.wkrzywiec.mealplanner.search.TestConfig
 import dev.wkrzywiec.mealplanner.search.TestRepository
+import io.restassured.RestAssured
+import io.restassured.filter.log.RequestLoggingFilter
+import io.restassured.filter.log.ResponseLoggingFilter
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
@@ -45,6 +49,9 @@ abstract class IntegrationTest {
     @Autowired
     private lateinit var testRepository: TestRepository
 
+    @LocalServerPort
+    private var port: Int = 0
+
     @TestConfiguration
     class MockOpenaiConfig {
         @Bean
@@ -53,6 +60,10 @@ abstract class IntegrationTest {
 
     @BeforeEach
     fun setUpIntegrationTest() {
+        RestAssured.baseURI = "http://localhost"
+        RestAssured.port = port
+        RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
+
         testRepository.clean()
     }
 }

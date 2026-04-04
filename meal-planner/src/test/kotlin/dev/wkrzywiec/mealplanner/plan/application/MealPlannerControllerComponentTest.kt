@@ -5,18 +5,13 @@ import dev.wkrzywiec.mealplanner.IntegrationTest
 import dev.wkrzywiec.mealplanner.search.FakeOpenAIEmbeddingEngine
 import dev.wkrzywiec.mealplanner.search.RecipeTestData.Companion.aRecipe
 import dev.wkrzywiec.mealplanner.search.TestRepository
-import io.restassured.RestAssured
-import io.restassured.filter.log.RequestLoggingFilter
-import io.restassured.filter.log.ResponseLoggingFilter
 import io.restassured.module.kotlin.extensions.Extract
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.time.Duration.Companion.milliseconds
 
 class MealPlannerControllerComponentTest : IntegrationTest() {
@@ -32,9 +27,6 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
         val testRecipe = aRecipe()
     }
 
-    @LocalServerPort
-    private var port: Int = 0
-
     @Autowired
     private lateinit var testRepository: TestRepository
 
@@ -43,13 +35,6 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
 
     @Autowired
     private lateinit var fakeEmbeddingEngine: FakeOpenAIEmbeddingEngine
-
-    @BeforeEach
-    fun setUp() {
-        RestAssured.baseURI = "http://localhost"
-        RestAssured.port = port
-        RestAssured.filters(RequestLoggingFilter(), ResponseLoggingFilter())
-    }
 
     @Test
     fun `GET single returns JSON meal plan`() {
