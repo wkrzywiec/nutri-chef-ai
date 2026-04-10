@@ -72,7 +72,7 @@ class AiAgentEventMapper(
                                 "name" to event.recipe?.name,
                             ),
                     )
-                is AiAgentEvent.NextActions -> NdJsonEvent("next.actions", ts = now, payload = event.actions)
+                is AiAgentEvent.SuggestedFollowUps -> NdJsonEvent("suggested.follow.ups", ts = now, payload = event.suggestions)
                 is AiAgentEvent.PlanReady -> NdJsonEvent("final", ts = now, payload = event.proposals)
                 is AiAgentEvent.PlanFailed ->
                     NdJsonEvent(

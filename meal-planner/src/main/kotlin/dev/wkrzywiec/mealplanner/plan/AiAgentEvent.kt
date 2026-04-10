@@ -32,8 +32,8 @@ sealed class AiAgentEvent {
         val recipe: Recipe?,
     ) : AiAgentEvent()
 
-    data class NextActions(
-        val actions: List<String>,
+    data class SuggestedFollowUps(
+        val suggestions: List<String>,
     ) : AiAgentEvent()
 
     data class PlanReady(

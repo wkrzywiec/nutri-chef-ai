@@ -120,7 +120,7 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
             userMessageContains(prompt)
         } responds {
             assistantContent =
-                """{"nextActions":["Buy groceries","Prep ingredients"],"recipeIds":["${testRecipe.getId()}"]}"""
+                """{"suggestedFollowUps":["Buy groceries","Prep ingredients"],"recipeIds":["${testRecipe.getId()}"]}"""
             finishReason = "stop"
         }
     }

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class NextActionsAgent(
+class SuggestedFollowUpsAgent(
     private val builder: ChatClient.Builder,
     @Value("\${meal-planner.ai.low-cost-model}") private val lowCostModel: String,
 ) {
@@ -38,7 +38,7 @@ class NextActionsAgent(
                     
                     RESPONSE FORMAT: Respond with valid JSON in exactly this structure:
                     {
-                      "nextActions": ["suggested action 1", "suggested action 2"]
+                      "suggestedFollowUps": ["suggested action 1", "suggested action 2"]
                     }
                     
                     REQUIREMENTS:
@@ -53,16 +53,16 @@ class NextActionsAgent(
                 .content()
         log.info { "Next actions from LLM:\n$answer" }
 
-        val selection = answer?.let { runCatching { it.toObject<RawNextActions>() }.getOrNull() }
+        val selection = answer?.let { runCatching { it.toObject<RawSuggestedFollowUps>() }.getOrNull() }
         if (selection == null) {
             log.warn { "Failed to parse next actions from LLM response: $answer" }
             return null
         }
 
-        return selection.nextActions
+        return selection.suggestedFollowUps
     }
 
-    private data class RawNextActions(
-        val nextActions: List<String>,
+    private data class RawSuggestedFollowUps(
+        val suggestedFollowUps: List<String>,
     )
 }

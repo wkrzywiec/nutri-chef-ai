@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 
 data class RecipeProposals(
     val response: String,
-    val nextActions: List<String>,
+    val suggestedFollowUps: List<String>,
     val recipes: List<RecipeEntry>,
 )
 
@@ -21,7 +21,7 @@ class MealPlanner(
     private val acknowledgementAgent: AcknowledgementAgent,
     private val recipeSelectionAgent: RecipeSelectionAgent,
     private val rationaleAgent: RationaleAgent,
-    private val nextActionsAgent: NextActionsAgent,
+    private val suggestedFollowUpsAgent: SuggestedFollowUpsAgent,
 ) {
     companion object {
         private val log = logger {}
@@ -62,20 +62,20 @@ class MealPlanner(
         onEvent(AiAgentEvent.LlmCallStarted("rationale"))
         rationaleAgent.execute(userPrompt, rationaleRecipes) { token -> onEvent(AiAgentEvent.ResponseToken(token)) }
 
-        // Step 4: LLM suggests next actions
-        onEvent(AiAgentEvent.LlmCallStarted("next-actions"))
-        val nextActions = nextActionsAgent.execute(userPrompt, rationaleRecipes)
-        if (nextActions == null) {
+        // Step 4: LLM suggests follow-up actions
+        onEvent(AiAgentEvent.LlmCallStarted("suggested-follow-ups"))
+        val suggestedFollowUps = suggestedFollowUpsAgent.execute(userPrompt, rationaleRecipes)
+        if (suggestedFollowUps == null) {
             onEvent(AiAgentEvent.PlanFailed("Failed to parse next actions from AI response. Please try again."))
             return
         }
 
-        onEvent(AiAgentEvent.NextActions(nextActions))
+        onEvent(AiAgentEvent.SuggestedFollowUps(suggestedFollowUps))
         onEvent(
             AiAgentEvent.PlanReady(
                 RecipeProposals(
                     response = "",
-                    nextActions = nextActions,
+                    suggestedFollowUps = suggestedFollowUps,
                     recipes = selectedRecipes,
                 ),
             ),
