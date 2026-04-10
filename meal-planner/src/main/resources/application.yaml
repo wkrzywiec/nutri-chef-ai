@@ -21,3 +21,7 @@ spring:
       embedding:
         options:
           model: "text-embedding-3-small"
+
+meal-planner:
+  ai:
+    low-cost-model: "gpt-4o-mini"
