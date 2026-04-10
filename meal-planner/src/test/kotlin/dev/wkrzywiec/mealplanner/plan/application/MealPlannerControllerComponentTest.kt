@@ -104,7 +104,26 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
         testRecipe: RecipeTestData,
         prompt: String,
     ) {
-        // Call 1: streaming narrative – system prompt contains the "explanation" phrase
+        // Call 1: acknowledgement – system prompt asks to acknowledge receipt of the request
+        openai.completion {
+            systemMessageContains("searching for suitable")
+            userMessageContains(prompt)
+        } respondsStream {
+            responseChunks = listOf("Got", " it!", " Searching", " for", " recipes", " now.")
+            finishReason = "stop"
+            delayBetweenChunks = 5.milliseconds
+        }
+
+        // Call 2: recipe selection – system prompt asks to select the best fitting recipes
+        openai.completion {
+            systemMessageContains("selects the best fitting recipes")
+            userMessageContains(prompt)
+        } responds {
+            assistantContent = """{"recipeIds":["${testRecipe.getId()}"]}"""
+            finishReason = "stop"
+        }
+
+        // Call 3: rationale – system prompt contains "brief overall explanation"
         openai.completion {
             systemMessageContains("brief overall explanation")
             userMessageContains(prompt)
@@ -114,13 +133,12 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
             delayBetweenChunks = 5.milliseconds
         }
 
-        // Call 2: batch JSON selection – system prompt contains "RESPONSE FORMAT"
+        // Call 4: suggested follow-ups – system prompt asks to suggest follow-up actions
         openai.completion {
-            systemMessageContains("RESPONSE FORMAT")
+            systemMessageContains("suggesting follow-up actions")
             userMessageContains(prompt)
         } responds {
-            assistantContent =
-                """{"suggestedFollowUps":["Buy groceries","Prep ingredients"],"recipeIds":["${testRecipe.getId()}"]}"""
+            assistantContent = """{"suggestedFollowUps":["Buy groceries","Prep ingredients"]}"""
             finishReason = "stop"
         }
     }
