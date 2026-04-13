@@ -6,12 +6,6 @@ import httpx
 
 
 SPRING_BASE_URL = os.environ.get("SPRING_BASE_URL", "http://localhost:8080")
-SPRING_API_KEY = os.environ.get("SPRING_API_KEY", "")
-
-
-def _auth_headers() -> dict:
-    return {"X-Api-Key": SPRING_API_KEY} if SPRING_API_KEY else {}
-
 
 async def _consume_sse(prompt: str):
     """Yield parsed event dicts from the SSE endpoint."""
