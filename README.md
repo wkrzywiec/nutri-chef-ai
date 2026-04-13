@@ -11,25 +11,25 @@ Let Nutri Chef AI spice up your week! This smart meal planner uses AI and a rich
 When running locally to get a single JSON response:
 
 ```bash
-curl -N "http://localhost:8080/api/planner/single/stream?prompt=healthy+fullfiling+meals"
+curl -N "http://localhost:8080/api/planner/single/stream?prompt=healthy+fulfilling+meals"
 ```
 
 or if it is called from WSL:
 
 ```bash
-curl -N "http://host.docker.internal:8080/api/planner/single/stream?prompt=healthy+fullfiling+meals"
+curl -N "http://host.docker.internal:8080/api/planner/single/stream?prompt=healthy+fulfilling+meals"
 ```
 
 For streaming use either (`text/event-stream`):
 
 ```bash
-curl -N -H "Accept: text/event-stream" "http://host.docker.internal:8080/api/planner/single?prompt=healthy+fullfiling+meals"
+curl -N -H "Accept: text/event-stream" "http://host.docker.internal:8080/api/planner/single?prompt=healthy+fulfilling+meals"
 ```
 
 or (`application/x-ndjson`):
 
 ```bash
-curl -N -H "Accept: application/x-ndjson" "http://host.docker.internal:8080/api/planner/single?prompt=healthy+fullfiling+meals"
+curl -N -H "Accept: application/x-ndjson" "http://host.docker.internal:8080/api/planner/single?prompt=healthy+fulfilling+meals"
 ```
 
 
