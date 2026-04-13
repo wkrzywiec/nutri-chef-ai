@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { ExternalLink } from "lucide-react"
 
 export default function RecipeCard() {
   return (
-    <Card className="w-72 shrink-0 overflow-hidden">
+    <Card className="w-full overflow-hidden flex flex-row">
       {props.imageUrl && (
-        <div className="h-40 w-full overflow-hidden">
+        <div className="w-[300px] h-[300px] shrink-0 overflow-hidden">
           <img
             src={props.imageUrl}
             alt={props.name}
@@ -13,12 +13,10 @@ export default function RecipeCard() {
           />
         </div>
       )}
-      <CardHeader className="pb-1 pt-3">
-        <CardTitle className="text-sm font-semibold leading-snug">
+      <div className="flex flex-col justify-start p-3 gap-1 flex-1 min-w-0">
+        <span className="text-base font-semibold leading-snug">
           {props.name || "Unknown recipe"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 pb-3">
+        </span>
         {props.description && (
           <p className="text-xs text-muted-foreground line-clamp-3">
             {props.description}
@@ -35,7 +33,7 @@ export default function RecipeCard() {
             {props.source || "Source"}
           </a>
         )}
-      </CardContent>
+      </div>
     </Card>
   )
 }

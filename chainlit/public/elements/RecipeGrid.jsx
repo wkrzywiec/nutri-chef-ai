@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { ExternalLink } from "lucide-react"
 
 function RecipeCard({ recipe }) {
   return (
-    <Card className="overflow-hidden flex flex-col">
+    <Card className="overflow-hidden flex flex-row">
       {recipe.imageUrl && (
-        <div className="h-40 w-full overflow-hidden">
+        <div className="w-[300px] h-[300px] shrink-0 overflow-hidden">
           <img
             src={recipe.imageUrl}
             alt={recipe.name}
@@ -13,12 +13,10 @@ function RecipeCard({ recipe }) {
           />
         </div>
       )}
-      <CardHeader className="pb-1 pt-3">
-        <CardTitle className="text-sm font-semibold leading-snug">
+      <div className="flex flex-col justify-start p-3 gap-1 flex-1 min-w-0">
+        <span className="text-base font-semibold leading-snug">
           {recipe.name || "Unknown recipe"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 pb-3 flex-1">
+        </span>
         {recipe.description && (
           <p className="text-xs text-muted-foreground line-clamp-3">
             {recipe.description}
@@ -35,7 +33,7 @@ function RecipeCard({ recipe }) {
             {recipe.source || "Source"}
           </a>
         )}
-      </CardContent>
+      </div>
     </Card>
   )
 }
@@ -44,7 +42,7 @@ export default function RecipeGrid() {
   const recipes = props.recipes || []
 
   return (
-    <div className="grid grid-cols-3 gap-4 w-full">
+    <div className="flex flex-col gap-3 w-full">
       {recipes.map((recipe, i) => (
         <RecipeCard key={i} recipe={recipe} />
       ))}
