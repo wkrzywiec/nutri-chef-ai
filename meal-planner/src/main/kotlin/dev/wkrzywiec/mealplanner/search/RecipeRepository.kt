@@ -29,6 +29,8 @@ class RecipeRepository(
               r.ingredients,
               r.instructions,
               r.source_url,
+              r.source,
+              r.img_url,
               r.servings,
               r.tags
             FROM (
@@ -61,6 +63,8 @@ class RecipeRepository(
                 ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
                 instructions = parseFromJson<Instruction>(rs.getString("instructions")),
                 sourceUrl = rs.getString("source_url"),
+                source = rs.getString("source"),
+                imageUrl = rs.getString("img_url"),
                 servings = rs.getString("servings"),
                 tags = parseFromJson<String>(rs.getString("tags")),
                 similarityScore = rs.getDouble("similarity_score"),
@@ -87,6 +91,8 @@ class RecipeRepository(
               r.ingredients,
               r.instructions,
               r.source_url,
+              r.source,
+              r.img_url,
               r.servings,
               r.tags
             FROM recipe r
@@ -108,6 +114,8 @@ class RecipeRepository(
                 ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
                 instructions = parseFromJson<Instruction>(rs.getString("instructions")),
                 sourceUrl = rs.getString("source_url"),
+                source = rs.getString("source"),
+                imageUrl = rs.getString("img_url"),
                 servings = rs.getString("servings"),
                 tags = parseFromJson<String>(rs.getString("tags")),
             )

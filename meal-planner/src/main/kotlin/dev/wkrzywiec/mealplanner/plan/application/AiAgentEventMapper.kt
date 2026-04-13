@@ -70,6 +70,15 @@ class AiAgentEventMapper(
                             mapOf(
                                 "recipeId" to event.recipeId,
                                 "name" to event.recipe?.name,
+                                "description" to event.recipe?.description,
+                                "ingredients" to event.recipe?.ingredients,
+                                "instructions" to event.recipe?.instructions,
+                                "sourceUrl" to event.recipe?.sourceUrl,
+                                "source" to event.recipe?.source,
+                                "imageUrl" to event.recipe?.imageUrl,
+                                "servings" to event.recipe?.servings,
+                                "tags" to event.recipe?.tags,
+                                "similarityScore" to event.recipe?.similarityScore,
                             ),
                     )
                 is AiAgentEvent.SuggestedFollowUps -> NdJsonEvent("suggested.follow.ups", ts = now, payload = event.suggestions)
