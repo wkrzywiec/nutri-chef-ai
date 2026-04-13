@@ -9,8 +9,8 @@ interface EmbeddingEngine {
 
 @Component
 class OpenAIEmbeddingEngine(
-    private val embeddingModel: EmbeddingModel
-): EmbeddingEngine {
+    private val embeddingModel: EmbeddingModel,
+) : EmbeddingEngine {
     override fun embed(prompt: String): FloatArray {
         val response = embeddingModel.embedForResponse(listOf(prompt))
         return response.result.output

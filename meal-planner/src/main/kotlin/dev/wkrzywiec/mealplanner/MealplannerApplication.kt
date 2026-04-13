@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class MealplannerApplication
 
 fun main(args: Array<String>) {
-	runApplication<MealplannerApplication>(*args)
+    runApplication<MealplannerApplication>(*args)
 }

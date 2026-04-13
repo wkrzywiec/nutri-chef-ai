@@ -11,6 +11,13 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
+  chainlit:
+    desc: Run Chainlit UI
+    dir: chainlit
+    cmds:
+      - echo "Starting Chainlit UI..."
+      - chainlit run app.py --port 8501
+
   meal-planner:
     desc: Run meal-planner app
     dir: meal-planner

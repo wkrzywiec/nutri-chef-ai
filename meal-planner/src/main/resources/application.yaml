@@ -1,6 +1,9 @@
 spring:
   application:
     name: meal-planner
+  mvc:
+    async:
+      request-timeout: -1
   datasource:
     url: jdbc:postgresql://localhost:5432/meal_planner
     username: postgres
@@ -18,3 +21,7 @@ spring:
       embedding:
         options:
           model: "text-embedding-3-small"
+
+meal-planner:
+  ai:
+    low-cost-model: "gpt-4o-mini"

@@ -12,12 +12,14 @@ import java.util.UUID
 class RecipeRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-
     companion object {
         private val log = logger {}
     }
 
-    fun findNearestRecipes(promptEmbedding: FloatArray, limit: Int = 10): List<Recipe> {
+    fun findNearestRecipes(
+        promptEmbedding: FloatArray,
+        limit: Int = 10,
+    ): List<Recipe> {
         val sql = """
             SELECT
               r.id AS recipe_id,
@@ -27,6 +29,8 @@ class RecipeRepository(
               r.ingredients,
               r.instructions,
               r.source_url,
+              r.source,
+              r.img_url,
               r.servings,
               r.tags
             FROM (
@@ -42,26 +46,30 @@ class RecipeRepository(
             ORDER BY re.similarity_score ASC;
         """
 
-        val params = MapSqlParameterSource()
-            .addValue("prompt_embedding", promptEmbedding)
-            .addValue("limit", limit)
+        val params =
+            MapSqlParameterSource()
+                .addValue("prompt_embedding", promptEmbedding)
+                .addValue("limit", limit)
 
         return jdbcTemplate.query(sql, params, rowMapper())
     }
 
-    fun rowMapper() = RowMapper<Recipe> { rs, _ ->
-        Recipe(
-            id = UUID.fromString(rs.getString("recipe_id")),
-            name = rs.getString("name"),
-            description = rs.getString("description"),
-            ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
-            instructions =  parseFromJson<Instruction>(rs.getString("instructions")),
-            sourceUrl = rs.getString("source_url"),
-            servings = rs.getString("servings"),
-            tags =  parseFromJson<String>(rs.getString("tags")),
-            similarityScore = rs.getDouble("similarity_score"),
-        )
-    }
+    private fun rowMapper() =
+        RowMapper { rs, _ ->
+            Recipe(
+                id = UUID.fromString(rs.getString("recipe_id")),
+                name = rs.getString("name"),
+                description = rs.getString("description"),
+                ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
+                instructions = parseFromJson<Instruction>(rs.getString("instructions")),
+                sourceUrl = rs.getString("source_url"),
+                source = rs.getString("source"),
+                imageUrl = rs.getString("img_url"),
+                servings = rs.getString("servings"),
+                tags = parseFromJson<String>(rs.getString("tags")),
+                similarityScore = rs.getDouble("similarity_score"),
+            )
+        }
 
     private inline fun <reified T> parseFromJson(jsonString: String?): List<T> {
         if (jsonString.isNullOrBlank()) return emptyList()
@@ -69,7 +77,7 @@ class RecipeRepository(
         return try {
             jsonString.toObject<List<T>>()
         } catch (e: Exception) {
-            log.error(e) {"Failed to parse json response to object:  $jsonString"}
+            log.error(e) { "Failed to parse json response to object:  $jsonString" }
             emptyList()
         }
     }
@@ -83,27 +91,33 @@ class RecipeRepository(
               r.ingredients,
               r.instructions,
               r.source_url,
+              r.source,
+              r.img_url,
               r.servings,
               r.tags
             FROM recipe r
             WHERE r.id IN (:recipe_ids)
         """
-        val params = MapSqlParameterSource()
-            .addValue("recipe_ids", recipeIds)
+        val params =
+            MapSqlParameterSource()
+                .addValue("recipe_ids", recipeIds)
 
         return jdbcTemplate.query(sql, params, rowMapperWithoutSimilarityScore())
     }
 
-    fun rowMapperWithoutSimilarityScore() = RowMapper<Recipe> { rs, _ ->
-        Recipe(
-            id = UUID.fromString(rs.getString("recipe_id")),
-            name = rs.getString("name"),
-            description = rs.getString("description"),
-            ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
-            instructions = parseFromJson<Instruction>(rs.getString("instructions")),
-            sourceUrl = rs.getString("source_url"),
-            servings = rs.getString("servings"),
-            tags =  parseFromJson<String>(rs.getString("tags"))
-        )
-    }
+    private fun rowMapperWithoutSimilarityScore() =
+        RowMapper { rs, _ ->
+            Recipe(
+                id = UUID.fromString(rs.getString("recipe_id")),
+                name = rs.getString("name"),
+                description = rs.getString("description"),
+                ingredients = parseFromJson<Ingredients>(rs.getString("ingredients")),
+                instructions = parseFromJson<Instruction>(rs.getString("instructions")),
+                sourceUrl = rs.getString("source_url"),
+                source = rs.getString("source"),
+                imageUrl = rs.getString("img_url"),
+                servings = rs.getString("servings"),
+                tags = parseFromJson<String>(rs.getString("tags")),
+            )
+        }
 }

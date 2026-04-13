@@ -7,13 +7,6 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 
-class ObjectMapperConfig {
-
-    companion object {
-        val objectMapper = objectMapper()
-    }
-}
-
 fun objectMapper() =
     jsonMapper {
         addModule(kotlinModule())
