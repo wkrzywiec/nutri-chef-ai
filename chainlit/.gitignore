@@ -15,6 +15,9 @@ venv/
 env/
 ENV/
 
+# uv
+.uv/
+
 # Environment variables
 .env
 .env.*
