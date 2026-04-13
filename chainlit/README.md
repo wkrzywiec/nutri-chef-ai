@@ -45,4 +45,3 @@ SPRING_BASE_URL=http://host.docker.internal:8080 chainlit run app.py --port 8000
 | Variable         | Default                  | Description              |
 |------------------|--------------------------|--------------------------|
 | `SPRING_BASE_URL` | `http://localhost:8080` | Meal Planner backend URL |
-| `SPRING_API_KEY`  | *(empty)*               | Optional API key         |
