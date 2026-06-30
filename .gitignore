@@ -71,3 +71,5 @@ dist-ssr
 infra/backup/*.dump.gz
 
 embeddings/batch-files/*
+
+meal-planner-reactive/**
