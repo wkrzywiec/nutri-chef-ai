@@ -6,8 +6,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.springframework.stereotype.Service
 
 data class RecipeProposals(
-    val response: String,
-    val suggestedFollowUps: List<String>,
     val recipes: List<RecipeEntry>,
 )
 
@@ -74,8 +72,6 @@ class MealPlanner(
         onEvent(
             AiAgentEvent.PlanReady(
                 RecipeProposals(
-                    response = "",
-                    suggestedFollowUps = suggestedFollowUps,
                     recipes = selectedRecipes,
                 ),
             ),

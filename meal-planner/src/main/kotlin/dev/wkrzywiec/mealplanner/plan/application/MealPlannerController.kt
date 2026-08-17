@@ -40,7 +40,7 @@ class MealPlannerController(
         mealPlanner.proposeMealStreaming(prompt) { event ->
             when (event) {
                 is AiAgentEvent.ResponseToken -> responseText.append(event.token)
-                is AiAgentEvent.PlanReady -> proposals = event.proposals.copy(response = responseText.toString())
+                is AiAgentEvent.PlanReady -> proposals = event.proposals
                 else -> Unit
             }
         }
