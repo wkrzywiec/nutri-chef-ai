@@ -25,7 +25,7 @@ class SuggestedFollowUpsAgent(
     fun execute(
         userPrompt: String,
         selectedRecipes: List<Recipe>,
-    ): List<String>? {
+    ): List<String> {
         log.info { "Requesting next actions from LLM (low-cost model: $lowCostModel)..." }
         val answer =
             builder
@@ -56,7 +56,7 @@ class SuggestedFollowUpsAgent(
         val selection = answer?.let { runCatching { it.toObject<RawSuggestedFollowUps>() }.getOrNull() }
         if (selection == null) {
             log.warn { "Failed to parse next actions from LLM response: $answer" }
-            return null
+            return emptyList()
         }
 
         return selection.suggestedFollowUps

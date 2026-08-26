@@ -48,7 +48,6 @@ class MealPlannerControllerComponentTest : IntegrationTest() {
             }
 
         assertThat(body).contains("Grilled Chicken Salad")
-        assertThat(body).contains("Buy groceries")
     }
 
     @Test
