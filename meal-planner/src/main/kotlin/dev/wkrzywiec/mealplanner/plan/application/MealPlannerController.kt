@@ -4,6 +4,7 @@ import dev.wkrzywiec.mealplanner.plan.AiAgentEvent
 import dev.wkrzywiec.mealplanner.plan.MealPlanner
 import dev.wkrzywiec.mealplanner.plan.RecipeProposals
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,19 +15,17 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.OutputStream
 import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 
 @RestController
 @RequestMapping("/api/planner")
 class MealPlannerController(
     private val mealPlanner: MealPlanner,
     private val mapper: AiAgentEventMapper,
+    @Qualifier("mealPlannerExecutor") private val executor: Executor,
 ) {
     companion object {
         private val log = KotlinLogging.logger {}
     }
-
-    private val executor: Executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     @GetMapping(
         path = ["/single"],
@@ -70,7 +69,7 @@ class MealPlannerController(
                 try {
                     sseEmitter.send(mapper.toSseEvent(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
                 } catch (sendException: Exception) {
-                    log.debug(sendException) { "Failed to send SSE error event after stream failure" }
+                    log.error(sendException) { "Failed to send SSE error event after stream failure" }
                 }
             } finally {
                 sseEmitter.complete()
@@ -95,12 +94,12 @@ class MealPlannerController(
             StreamingResponseBody { out: OutputStream ->
                 try {
                     mealPlanner.proposeMealStreaming(prompt) { event ->
-                        out.write(mapper.toNdJsonLine(event))
+                        out.write(mapper.toAgentResponseDto(event))
                         out.flush()
                     }
                 } catch (e: Exception) {
                     log.warn(e) { "NDJSON stream failed" }
-                    out.write(mapper.toNdJsonLine(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
+                    out.write(mapper.toAgentResponseDto(AiAgentEvent.PlanFailed(e.message ?: "Unknown error")))
                     out.flush()
                 }
             }

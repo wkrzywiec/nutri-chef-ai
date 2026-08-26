@@ -3,44 +3,35 @@ package dev.wkrzywiec.mealplanner.plan
 import dev.wkrzywiec.mealplanner.search.Recipe
 import java.util.UUID
 
-sealed class AiAgentEvent {
+sealed interface AiAgentEvent {
     data class PlanningStarted(
         val prompt: String,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 
-    class SearchingRecipes : AiAgentEvent()
+    data class ResponseToken(
+        val token: String,
+    ) : AiAgentEvent
+
+    class SearchingRecipes : AiAgentEvent
 
     data class RecipesFound(
         val count: Int,
-    ) : AiAgentEvent()
-
-    data class LlmCallStarted(
-        val modelName: String,
-    ) : AiAgentEvent()
-
-    data class LlmResponse(
-        val answer: String,
-    ) : AiAgentEvent()
-
-    // Streaming token events
-    data class ResponseToken(
-        val token: String,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 
     data class RecipeSelected(
         val recipeId: UUID,
         val recipe: Recipe?,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 
     data class SuggestedFollowUps(
         val suggestions: List<String>,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 
     data class PlanReady(
         val proposals: RecipeProposals,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 
     data class PlanFailed(
         val reason: String,
-    ) : AiAgentEvent()
+    ) : AiAgentEvent
 }

@@ -31,24 +31,21 @@ class MealPlanner(
         onEvent: (AiAgentEvent) -> Unit,
     ) {
         log.info { "Streaming meal proposals for prompt '$userPrompt'" }
-        onEvent(AiAgentEvent.PlanningStarted(userPrompt))
 
         // Step 0: stream a brief acknowledgement so the user knows the input was received
-        onEvent(AiAgentEvent.LlmCallStarted("acknowledgement"))
+        onEvent(AiAgentEvent.PlanningStarted(userPrompt))
         acknowledgementAgent.execute(userPrompt) { token -> onEvent(AiAgentEvent.ResponseToken(token)) }
 
-        onEvent(AiAgentEvent.SearchingRecipes())
-
         // Step 1: fetch candidate recipes
+        onEvent(AiAgentEvent.SearchingRecipes())
         val recipes = recipeSearch.findRecipes(userPrompt, RECIPE_FETCH_LIMIT)
         log.info { "Found ${recipes.size} recipes" }
         onEvent(AiAgentEvent.RecipesFound(recipes.size))
 
         // Step 2: LLM selects the best recipes
-        onEvent(AiAgentEvent.LlmCallStarted("recipe-selection"))
         val selectedRecipes = recipeSelectionAgent.execute(userPrompt, recipes)
-        if (selectedRecipes == null) {
-            onEvent(AiAgentEvent.PlanFailed("Failed to parse recipe selection from AI response. Please try again."))
+        if (selectedRecipes.isEmpty()) {
+            onEvent(AiAgentEvent.PlanFailed("Failed to found matching recipes. Please try again."))
             return
         }
         selectedRecipes.forEach { entry ->
@@ -57,17 +54,10 @@ class MealPlanner(
 
         // Step 3: LLM streams the rationale for the selected recipes
         val rationaleRecipes = selectedRecipes.mapNotNull { it.recipe }
-        onEvent(AiAgentEvent.LlmCallStarted("rationale"))
         rationaleAgent.execute(userPrompt, rationaleRecipes) { token -> onEvent(AiAgentEvent.ResponseToken(token)) }
 
         // Step 4: LLM suggests follow-up actions
-        onEvent(AiAgentEvent.LlmCallStarted("suggested-follow-ups"))
         val suggestedFollowUps = suggestedFollowUpsAgent.execute(userPrompt, rationaleRecipes)
-        if (suggestedFollowUps == null) {
-            onEvent(AiAgentEvent.PlanFailed("Failed to parse next actions from AI response. Please try again."))
-            return
-        }
-
         onEvent(AiAgentEvent.SuggestedFollowUps(suggestedFollowUps))
         onEvent(
             AiAgentEvent.PlanReady(

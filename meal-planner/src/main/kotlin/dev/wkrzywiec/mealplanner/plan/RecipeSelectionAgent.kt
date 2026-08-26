@@ -23,7 +23,7 @@ class RecipeSelectionAgent(
     fun execute(
         userPrompt: String,
         recipes: List<Recipe>,
-    ): List<RecipeEntry>? {
+    ): List<RecipeEntry> {
         log.info { "Requesting recipe selection from LLM..." }
         val answer =
             builder
@@ -54,7 +54,7 @@ class RecipeSelectionAgent(
         val selection = answer?.let { runCatching { it.toObject<RawRecipeSelection>() }.getOrNull() }
         if (selection == null) {
             log.warn { "Failed to parse recipe selection from LLM response: $answer" }
-            return null
+            return emptyList()
         }
 
         return selection.recipeIds.mapNotNull { recipeId ->

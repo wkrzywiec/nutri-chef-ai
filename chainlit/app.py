@@ -10,7 +10,7 @@ SPRING_BASE_URL = os.environ.get("SPRING_BASE_URL", "http://localhost:8080")
 async def _consume_sse(prompt: str):
     """Yield parsed event dicts from the SSE endpoint."""
     url = f"{SPRING_BASE_URL}/api/planner/single"
-    headers = {**_auth_headers(), "Accept": "text/event-stream"}
+    headers = {"Accept": "text/event-stream"}
     async with httpx.AsyncClient(timeout=None) as client:
         async with client.stream("GET", url, params={"prompt": prompt}, headers=headers) as resp:
             resp.raise_for_status()

@@ -15,55 +15,42 @@ class AiAgentEventMapper(
         val ts: Instant,
         val phase: String,
         val message: String,
-        val pct: Int? = null,
     )
 
-    private data class NdJsonEvent(
+    private data class AgentResponseDto(
         val type: String,
         val ts: Instant,
         val payload: Any,
     )
 
     fun toSseEvent(event: AiAgentEvent): SseEmitter.SseEventBuilder =
-        SseEmitter.event().data(toNdJsonLine(event).toString(Charsets.UTF_8).trimEnd())
+        SseEmitter.event().data(toAgentResponseDto(event).toString(Charsets.UTF_8).trimEnd())
 
-    fun toNdJsonLine(event: AiAgentEvent): ByteArray {
-        val now = Instant.now(clock)
+    fun toAgentResponseDto(event: AiAgentEvent): ByteArray {
+        val now = clock.instant()
         val envelope =
             when (event) {
                 is AiAgentEvent.PlanningStarted ->
-                    NdJsonEvent(
+                    AgentResponseDto(
                         "status",
                         ts = now,
                         payload = StatusEvent(ts = now, phase = "start", message = "Starting meal proposal for: ${event.prompt}"),
                     )
                 is AiAgentEvent.SearchingRecipes ->
-                    NdJsonEvent(
+                    AgentResponseDto(
                         "status",
                         ts = now,
                         payload = StatusEvent(ts = now, phase = "search", message = "Searching for matching recipes"),
                     )
                 is AiAgentEvent.RecipesFound ->
-                    NdJsonEvent(
+                    AgentResponseDto(
                         "status",
                         ts = now,
                         payload = StatusEvent(ts = now, phase = "search", message = "Found ${event.count} matching recipes"),
                     )
-                is AiAgentEvent.LlmCallStarted ->
-                    NdJsonEvent(
-                        "status",
-                        ts = now,
-                        payload = StatusEvent(ts = now, phase = "llm", message = "Calling LLM (${event.modelName})"),
-                    )
-                is AiAgentEvent.LlmResponse ->
-                    NdJsonEvent(
-                        "status",
-                        ts = now,
-                        payload = StatusEvent(ts = now, phase = "llm", message = "LLM responded"),
-                    )
-                is AiAgentEvent.ResponseToken -> NdJsonEvent("response.token", ts = now, payload = event.token)
+                is AiAgentEvent.ResponseToken -> AgentResponseDto("response.token", ts = now, payload = event.token)
                 is AiAgentEvent.RecipeSelected ->
-                    NdJsonEvent(
+                    AgentResponseDto(
                         "recipe.selected",
                         ts = now,
                         payload =
@@ -81,10 +68,10 @@ class AiAgentEventMapper(
                                 "similarityScore" to event.recipe?.similarityScore,
                             ),
                     )
-                is AiAgentEvent.SuggestedFollowUps -> NdJsonEvent("suggested.follow.ups", ts = now, payload = event.suggestions)
-                is AiAgentEvent.PlanReady -> NdJsonEvent("final", ts = now, payload = event.proposals)
+                is AiAgentEvent.SuggestedFollowUps -> AgentResponseDto("suggested.follow.ups", ts = now, payload = event.suggestions)
+                is AiAgentEvent.PlanReady -> AgentResponseDto("final", ts = now, payload = event.proposals)
                 is AiAgentEvent.PlanFailed ->
-                    NdJsonEvent(
+                    AgentResponseDto(
                         "error",
                         ts = now,
                         payload = StatusEvent(ts = now, phase = "error", message = event.reason),
